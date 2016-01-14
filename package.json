@@ -1,0 +1,43 @@
+{
+  "name": "gh-contrib",
+  "version": "0.0.0",
+  "description": "My smashing module",
+  "license": "MIT",
+  "repository": "RichardLitt/gh-contrib",
+  "author": {
+    "name": "Richard Littauer",
+    "email": "richard.littauer@gmail.com",
+    "url": "burntfen.com"
+  },
+  "bin": "cli.js",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "xo && ava"
+  },
+  "files": [
+    "index.js",
+    "cli.js"
+  ],
+  "keywords": [
+    "cli-app",
+    "cli",
+    ""
+  ],
+  "dependencies": {
+    "bluebird": "^3.1.1",
+    "meow": "^3.6.0",
+    "moment": "^2.11.1",
+    "octokat": "^0.4.15"
+  },
+  "devDependencies": {
+    "ava": "^0.8.0",
+    "xo": "^0.12.1"
+  },
+  "xo": {
+    "ignores": [
+      "test.js"
+    ]
+  }
+}
