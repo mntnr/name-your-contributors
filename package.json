@@ -1,9 +1,9 @@
 {
-  "name": "gh-contrib",
+  "name": "name-your-contributors",
   "version": "0.0.0",
-  "description": "My smashing module",
+  "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
-  "repository": "RichardLitt/gh-contrib",
+  "repository": "RichardLitt/name-your-contributors",
   "author": {
     "name": "Richard Littauer",
     "email": "richard.littauer@gmail.com",
@@ -27,6 +27,10 @@
   ],
   "dependencies": {
     "bluebird": "^3.1.1",
+    "depaginate": "0.0.3",
+    "get-code-reviewers": "0.0.2",
+    "get-committers": "0.0.2",
+    "get-issue-commenters": "0.0.0",
     "meow": "^3.6.0",
     "moment": "^2.11.1",
     "octokat": "^0.4.15"

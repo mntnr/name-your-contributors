@@ -1,65 +1,61 @@
-# gh-contrib [![Build Status](https://travis-ci.org/RichardLitt/gh-contrib.svg?branch=master)](https://travis-ci.org/RichardLitt/gh-contrib)
+# name-your-contributors [![Build Status](https://travis-ci.org/RichardLitt/name-your-contributors.svg?branch=master)](https://travis-ci.org/RichardLitt/name-your-contributors)
 
-> My smashing module
+> Name your GitHub contributors; get commits, issues, and comments
 
 
 ## Install
 
 ```
-$ npm install --save gh-contrib
+$ npm install --save name-your-contributors
 ```
 
+You also need to get a GitHub application token: https://github.com/settings/tokens. Provide it in the CLI or set it as `$GITHUB_OGN_TOKEN` somewhere in your bash_profile.
 
 ## Usage
 
 ```js
-const ghContrib = require('gh-contrib');
+const nameYourContributors = require('name-your-contributors');
 
-ghContrib('unicorns');
-//=> 'unicorns & rainbows'
+nameYourContributors({
+  org: 'ipfs',
+  since: '2016-01-15T00:20:24Z'
+});
+//=> '[@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
 ```
 
 
 ## API
 
-### ghContrib(input, [options])
+### nameYourContributors({org: org, since: since})
 
-#### input
+#### opts.org
 
 Type: `string`
 
-Lorem ipsum.
+The organization to traverse.
 
-#### options
+#### opts.since
 
-##### foo
+Type: `string`
 
-Type: `boolean`  
-Default: `false`
-
-Lorem ipsum.
+The ISO timestamp to get contributors since.
 
 
 ## CLI
 
 ```
-$ npm install --global gh-contrib
+$ npm install --global name-your-contributors
 ```
 
 ```
-$ gh-contrib --help
+$ name-your-contributors --help
 
   Usage
-    gh-contrib [input]
-
-  Options
-    --foo  Lorem ipsum. [Default: false]
+    name-your-contributors [org] [since]
 
   Examples
-    $ gh-contrib
-    unicorns & rainbows
-    $ gh-contrib ponies
-    ponies & rainbows
+    $ name-your-contributors
+    [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
 ```
 
 
