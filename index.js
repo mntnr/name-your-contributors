@@ -20,6 +20,8 @@ module.exports = function (organization, opts) {
       return union
     }
   ).map(function (response) {
-    console.log(`[@${commit.author.login}](//github.com/${commit.author.login}) (${commit.commit.author.name})`)
+    console.log(response)
+    // TODO Get information from Octocat about users
+    //console.log(`[@${commit.author.login}](//github.com/${commit.author.login}) (${commit.commit.author.name})`)
   })
 }
