@@ -9,7 +9,10 @@ const moment = require('moment')
 const _ = require('lodash')
 
 module.exports = function (organization, opts) {
-  opts = opts || {}
+  opts = opts || {
+    org: 'ipfs',
+    repo: 'go-ipfs'
+  }
 
   function loadAllPages (arr, callFx, opts) {
     opts['page'] = opts.page || 1
@@ -31,6 +34,8 @@ module.exports = function (organization, opts) {
   }
 
   return Promise.try(function () {
+    return octo.orgs(opts.org).repos.fetch()
+  }).map(function (repo) {
     const allBranches = []
     return loadAllPages(allBranches, function (opts) {
       return octo.repos(opts.org, opts.repo).branches.fetch({
@@ -38,30 +43,32 @@ module.exports = function (organization, opts) {
         page: opts.page
       })
     }, {
-      org: 'ipfs',
-      repo: 'go-ipfs'
+      org: opts.org,
+      repo: repo.name
     })
   }).map(function (response) {
-    return octo.repos('ipfs', 'go-ipfs', 'commits').fetch({
-      sha: response.commit.sha,
-      since: '2015-01-11T01:08:01Z'
-    })
-    // const allCommits = []
-    // return loadAllPages(allCommits, function (opts) {
-    //     return octo.repos(opts.org, opts.repo, 'commits').fetch({
-    //         since: opts.since,
-    //         page: opts.page,
-    //         per_page: 100,
-    //         sha: opts.sha
-    //     })
-    //   }, {
-    //     org: 'ipfs',
-    //     repo: 'go-ipfs',
-    //     sha: response.commit.sha,
-    //     since: '2015-01-01T01:08:01Z'
-    //   })
-  }).then(function (response) {
-    console.log(response)
+    // Here. I want to have access to the repo.name I used in the last call.
+    console.log('response', response)
+  //   const allCommits = []
+  //   return loadAllPages(allCommits, function (opts) {
+  //       return octo.repos(opts.org, opts.repo, 'commits').fetch({
+  //           since: opts.since,
+  //           page: opts.page,
+  //           per_page: 100,
+  //           sha: opts.sha
+  //       })
+  //     }, {
+  //       org: opts.org,
+  //       repo: repoName,
+  //       sha: response.commit.sha,
+  //       since: '2016-01-11T00:01:01Z'
+  //     })
+  // }).then(function (response) {
+  //   return _.uniq(_.map(_.flatten(response), function (commit) {
+  //     return `[@${commit.author.login}](//github.com/${commit.author.login}) (${commit.commit.author.name})`
+  //   }))
+  // }).each(function (contributors) {
+  //   console.log(contributors)
   }).catch(function (err) {
     console.log('err', err)
   })
