@@ -54,7 +54,7 @@ $ name-your-contributors --help
     name-your-contributors [org] [since]
 
   Examples
-    $ name-your-contributors
+    $ name-your-contributors ifps 2016-01-15T00:20:24Z
     [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
 ```
 
