@@ -4,14 +4,14 @@ var meow = require('meow')
 var ghContrib = require('./')
 var Promise = require('bluebird')
 
-var cli = meow([
-	'Usage',
-	'  $ name-your-contributors [org] [since]',
-	'',
-	'Examples',
-	'  $ name-your-contributors ipfs 2016-01-15T00:20:24Z',
-	'  [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
-])
+const cli = meow([`
+	Usage
+	  $ name-your-contributors [org] [since]
+
+	Examples
+	  $ name-your-contributors ipfs 2016-01-15T00:20:24Z
+	  [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)
+`])
 
 Promise.try(function () {
   return ghContrib({
