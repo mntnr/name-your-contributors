@@ -32,8 +32,7 @@
     "get-committers": "^0.0.3",
     "get-issue-commenters": "^0.0.1",
     "meow": "^3.7.0",
-    "moment": "^2.11.1",
-    "octokat": "^0.4.15"
+    "moment": "^2.11.1"
   },
   "devDependencies": {
     "ava": "^0.10.0",

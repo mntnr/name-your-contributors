@@ -1,9 +1,5 @@
 'use strict'
 
-const Octokat = require('octokat')
-const octo = new Octokat({
-  token: process.env.GITHUB_OGN_TOKEN
-})
 const Promise = require('bluebird')
 const _ = require('lodash')
 const getCodeReviewers = require('get-code-reviewers')
