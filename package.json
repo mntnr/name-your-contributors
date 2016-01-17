@@ -23,16 +23,34 @@
   "keywords": [
     "cli-app",
     "cli",
-    ""
+    "name",
+    "contribs",
+    "contrib",
+    "contributor",
+    "contributors",
+    "github",
+    "OSS",
+    "open source",
+    "commenters",
+    "creators",
+    "reviewers",
+    "review",
+    "code review",
+    "community",
+    "contribute",
+    "contributing"
   ],
   "dependencies": {
     "bluebird": "^3.1.1",
-    "depaginate": "^0.0.3",
-    "get-code-reviewers": "^0.0.4",
+    "depaginate": "^0.0.4",
+    "get-code-reviewers": "^0.0.5",
     "get-committers": "^0.0.3",
-    "get-issue-commenters": "^0.0.1",
+    "get-github-issue-creators": "0.0.0",
+    "get-github-user": "0.0.2",
+    "get-issue-commenters": "^1.0.0",
     "meow": "^3.7.0",
-    "moment": "^2.11.1"
+    "moment": "^2.11.1",
+    "sort-alphabetic": "0.0.0"
   },
   "devDependencies": {
     "ava": "^0.10.0",
