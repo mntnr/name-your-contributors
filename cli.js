@@ -6,18 +6,19 @@ var Promise = require('bluebird')
 
 const cli = meow([`
 	Usage
-	  $ name-your-contributors [org] [since]
+	  $ name-your-contributors <input> [opts]
 
 	Examples
-	  $ name-your-contributors ipfs 2016-01-15T00:20:24Z
+	  $ name-your-contributors ipfs --since=2016-01-15T00:20:24Z
 	  [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)
-`])
+`, {
+  alias: {
+    s: 'since'
+  }
+}])
 
 Promise.try(function () {
-  return ghContrib({
-    org: cli.input[0],
-    since: cli.input[1]
-  })
+  return ghContrib(cli.input[0], cli.flags)
 }).map(function (response) {
   console.log(response)
 })

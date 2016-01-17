@@ -2,7 +2,6 @@
 
 > Name your GitHub contributors; get commits, issues, and comments
 
-
 ## Install
 
 ```
@@ -16,8 +15,7 @@ You also need to get a GitHub application token: https://github.com/settings/tok
 ```js
 const nameYourContributors = require('name-your-contributors');
 
-nameYourContributors({
-  org: 'ipfs',
+nameYourContributors('ipfs', {
   since: '2016-01-15T00:20:24Z'
 });
 //=> '[@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
@@ -26,9 +24,9 @@ nameYourContributors({
 
 ## API
 
-### nameYourContributors({org: org, since: since})
+### nameYourContributors(org, {since: since})
 
-#### opts.org
+#### org
 
 Type: `string`
 
@@ -51,11 +49,12 @@ $ npm install --global name-your-contributors
 $ name-your-contributors --help
 
   Usage
-    name-your-contributors [org] [since]
+    $ name-your-contributors <input> [opts]
 
   Examples
-    $ name-your-contributors ifps 2016-01-15T00:20:24Z
-    [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
+    $ name-your-contributors ipfs --since=2016-01-15T00:20:24Z
+    [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)
+
 ```
 
 
