@@ -30,7 +30,8 @@ nameYourContributors('ipfs', {
 
 Type: `string`
 
-The organization to traverse.
+The organization to traverse. If no organization is provided, the script
+will find the username and repo for the local git repository and use that.
 
 #### opts.since
 
