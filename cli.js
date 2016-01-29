@@ -38,6 +38,15 @@ Promise.try(() => {
     cli.input[0] = res[0]
     cli.flags['repo'] = res[1]
   }
+
+  // Couldn't figure out minimist to make this work.
+  if (cli.flags.from) {
+    cli.flags.since = cli.flags.from
+  }
+  if (cli.flags.to) {
+    cli.flags.until = cli.flags.to
+  }
+
   return ghContrib(cli.input[0], cli.flags)
 }).map(function (response) {
   console.log(response)
