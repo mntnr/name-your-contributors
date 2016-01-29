@@ -14,7 +14,7 @@
     "node": ">=0.10.0"
   },
   "scripts": {
-    "test": "xo && ava"
+    "test": "standard && ava"
   },
   "files": [
     "index.js",
@@ -55,12 +55,7 @@
     "sort-alphabetic": "0.0.0"
   },
   "devDependencies": {
-    "ava": "^0.10.0",
+    "standard": "^5.4.1",
     "xo": "^0.12.1"
-  },
-  "xo": {
-    "ignores": [
-      "test.js"
-    ]
   }
 }
