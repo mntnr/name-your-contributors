@@ -42,8 +42,8 @@
   ],
   "dependencies": {
     "depaginate": "^0.0.4",
-    "get-code-reviewers": "^0.0.5",
     "bluebird": "^3.1.5",
+    "get-code-reviewers": "^0.1.1",
     "get-committers": "^0.0.3",
     "get-github-issue-creators": "0.0.0",
     "get-github-user": "0.0.2",

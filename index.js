@@ -10,10 +10,7 @@ const sortAlphabetically = require('sort-alphabetic')
 
 module.exports = function (org, opts) {
   return Promise.join(
-    getCodeReviewers({
-      org: org,
-      since: opts.since
-    }),
+    getCodeReviewers(org, opts),
     getIssueCommenters(org, opts),
     getIssueCreators(org, opts),
     function (reviewers, commenters, creators) {
