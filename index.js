@@ -21,8 +21,9 @@ module.exports = function (org, opts) {
   .then(_.flatten.bind(_))
   .map((user) => {
     var str = '[@' + user.login + '](//github.com/' + user.login + ')'
-    if (user.name)
+    if (user.name) {
       str += ' (' + user.name + ')'
+    }
     return str
   }).then(arr => sortAlphabetically(arr))
 }
