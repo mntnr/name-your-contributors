@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "RichardLitt/name-your-contributors",
