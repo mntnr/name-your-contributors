@@ -8,7 +8,9 @@
 $ npm install --save name-your-contributors
 ```
 
-You also need to get a GitHub application token: https://github.com/settings/tokens. Provide it in the CLI or set it as `$GITHUB_OGN_TOKEN` somewhere in your bash_profile.
+**NOTE**: You also need to get a GitHub application token, if you are going to be hitting the API much. Go here: https://github.com/settings/tokens. Click on "Generate New Token". It doesn't need to have any special scopes. Name the token something information: `name-your-contributors` is a good name. 
+
+Set the token with the variable name `$GITHUB_OGN_TOKEN` somewhere in your .bash_profile or .bashrc files. These are normally hidden in your root directory. Alternativaly, you can provide it in the CLI each time you run the command by calling `GITHUB_OGN_TOKEN=<token> name-your-contributors`.
 
 ## Usage
 
