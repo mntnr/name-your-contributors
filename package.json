@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "RichardLitt/name-your-contributors",
@@ -52,7 +52,7 @@
     "xo": "^0.12.1"
   },
   "coordinates": [
-    42.3890955,
-    -71.1199307
+    42.3890671,
+    -71.1202398
   ]
 }
