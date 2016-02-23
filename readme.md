@@ -8,9 +8,16 @@
 $ npm install --save name-your-contributors
 ```
 
-**NOTE**: You also need to get a GitHub application token, if you are going to be hitting the API much. Go here: https://github.com/settings/tokens. Click on "Generate New Token". It doesn't need to have any special scopes. Name the token something information: `name-your-contributors` is a good name. 
+**NOTE**: You also need to get a GitHub application token, if you are going to be hitting the API much. Go here: https://github.com/settings/tokens. Click on "Generate New Token". It doesn't need to have any special scopes. Name the token something informative: `name-your-contributors` is a good name.
 
 Set the token with the variable name `$GITHUB_OGN_TOKEN` somewhere in your .bash_profile or .bashrc files. These are normally hidden in your root directory. Alternativaly, you can provide it in the CLI each time you run the command by calling `GITHUB_OGN_TOKEN=<token> name-your-contributors`.
+
+The environmental variable is used by several of `name-your-contributor`'s dependencies:
+
+ * [get-code-reviewers](https://github.com/RichardLitt/get-code-reviewers) - Get users who comment on PRs or Code for OS GitHub Repos.
+ * [get-issue-commenters](https://github.com/richardlitt/get-issue-commenters) - Get users who comment on issues for OS GitHub Repos.
+ * [get-github-issue-creators](https://github.com/RichardLitt/get-github-issue-creators) - Get a list of GitHub issue creators from an organization or repo.
+ * [get-github-user](https://github.com/RichardLitt/get-github-user) - Get GitHub user information from just a username.
 
 ## Usage
 
