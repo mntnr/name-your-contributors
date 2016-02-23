@@ -28,13 +28,19 @@ const cli = meow([`
 }])
 
 Promise.try(() => {
-  return pify(gitconfig)(process.cwd())
-}).then(config => {
-  if (config && config.remote && config.remote.origin && config.remote.origin.url) {
-    return config.remote.origin.url.split(':')[1].split('.git')[0].split('/')
+  if (cli.input.length === 0) {
+    return Promise.try(() => {
+      return pify(gitconfig)(process.cwd())
+    }).then(config => {
+      if (config && config.remote && config.remote.origin && config.remote.origin.url) {
+        return config.remote.origin.url.split(':')[1].split('.git')[0].split('/')
+      }
+    })
+  } else {
+    return
   }
 }).then((res) => {
-  if (res && cli.input.length === 0) {
+  if (res) {
     cli.input[0] = res[0]
     cli.flags['repo'] = res[1]
   }
