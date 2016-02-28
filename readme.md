@@ -8,7 +8,7 @@
 $ npm install --save name-your-contributors
 ```
 
-### Note: GitHub Token
+### API Limits and setting up a GitHub Token
 
 You also need to get a GitHub application token, if you are going to be hitting the API much. Go here: https://github.com/settings/tokens. Click on "Generate New Token". It doesn't need to have any special scopes. Name the token something informative: `name-your-contributors` is a good name.
 
