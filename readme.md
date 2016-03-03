@@ -12,7 +12,7 @@ $ npm install --save name-your-contributors
 
 You also need to get a GitHub application token, if you are going to be hitting the API much. Go here: https://github.com/settings/tokens. Click on "Generate New Token". It doesn't need to have any special scopes. Name the token something informative: `name-your-contributors` is a good name.
 
-Set the token with the variable name `$GITHUB_OGN_TOKEN` somewhere in your .bash_profile or .bashrc files. These are normally hidden in your root directory. Alternatively, you can provide it in the CLI each time you run the command by calling `GITHUB_OGN_TOKEN=<token> name-your-contributors`.
+Set the token with the variable name `$GITHUB_OGN_TOKEN` somewhere in your `.bash_profile` or `.bashrc` files. These are normally hidden in your root directory. Alternatively, you can provide it in the CLI each time you run the command by calling `GITHUB_OGN_TOKEN=<token> name-your-contributors`.
 
 The environmental variable is used by several of `name-your-contributor`'s dependencies:
 
@@ -50,6 +50,17 @@ Type: `string`
 
 The ISO timestamp to get contributors since.
 
+#### opts.until
+
+Type: `string`
+
+Get contributors from before this ISO timestamp.
+
+#### opts.repo
+
+Type: `string`
+
+Only traverse the given repository.
 
 ## CLI
 
