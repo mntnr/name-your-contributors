@@ -15,11 +15,11 @@ module.exports = function (org, opts) {
     getIssueCommenters(org, opts),
     getIssueCreators(org, opts),
     getPRCreators(org, opts),
-    function (reviewers, commenters, creators) {
-      var union = _.union(reviewers, commenters, creators)
+    function (reviewers, commenters, creators, pullRequesters) {
+      var union = _.union(reviewers, commenters, creators, pullRequesters)
       return union
     }
-  ).map(user => getGithubUser(user))
+  ).map((user) => getGithubUser(user))
   .then(_.flatten.bind(_))
   .map((user) => {
     var str = '[@' + user.login + '](//github.com/' + user.login + ')'
@@ -27,5 +27,5 @@ module.exports = function (org, opts) {
       str += ' (' + user.name + ')'
     }
     return str
-  }).then(arr => sortAlphabetically(arr))
+  }).then((arr) => sortAlphabetically(arr))
 }
