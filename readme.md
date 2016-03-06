@@ -19,6 +19,7 @@ The environmental variable is used by several of `name-your-contributor`'s depen
  * [get-code-reviewers](https://github.com/RichardLitt/get-code-reviewers) - Get users who comment on PRs or code for OS GitHub repos.
  * [get-issue-commenters](https://github.com/richardlitt/get-issue-commenters) - Get users who comment on issues for OS GitHub repos.
  * [get-github-issue-creators](https://github.com/RichardLitt/get-github-issue-creators) - Get a list of GitHub issue creators from an organization or repo.
+ * [get-github-pr-creators](https://github.com/RichardLitt/get-pr-creators) - Get a list of GitHub PR creators from an organization or repo.
  * [get-github-user](https://github.com/RichardLitt/get-github-user) - Get GitHub user information from just a username.
 
 ## Usage
