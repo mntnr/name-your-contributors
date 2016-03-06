@@ -5,6 +5,7 @@ const _ = require('lodash')
 const getCodeReviewers = require('get-code-reviewers')
 const getIssueCommenters = require('get-issue-commenters')
 const getIssueCreators = require('get-github-issue-creators')
+const getPRCreators = require('get-github-pr-creators')
 const getGithubUser = require('get-github-user')
 const sortAlphabetically = require('sort-alphabetic')
 
@@ -13,6 +14,7 @@ module.exports = function (org, opts) {
     getCodeReviewers(org, opts),
     getIssueCommenters(org, opts),
     getIssueCreators(org, opts),
+    getPRCreators(org, opts),
     function (reviewers, commenters, creators) {
       var union = _.union(reviewers, commenters, creators)
       return union

@@ -34,22 +34,23 @@
     "contributing"
   ],
   "dependencies": {
-    "bluebird": "^3.1.5",
-    "depaginate": "^0.0.5",
+    "bluebird": "^3.3.3",
+    "depaginate": "^0.0.6",
     "get-code-reviewers": "^0.1.1",
     "get-committers": "^0.0.3",
     "get-github-issue-creators": "0.0.1",
+    "get-github-pr-creators": "0.0.1",
     "get-github-user": "0.0.4",
     "get-issue-commenters": "^1.0.2",
     "gitconfiglocal": "^2.0.1",
     "meow": "^3.7.0",
-    "moment": "^2.11.1",
+    "moment": "^2.11.2",
     "pify": "^2.3.0",
     "sort-alphabetic": "0.0.0"
   },
   "devDependencies": {
-    "standard": "^5.4.1",
-    "xo": "^0.12.1"
+    "standard": "^6.0.7",
+    "xo": "^0.13.0"
   },
   "coordinates": [
     42.395729,
