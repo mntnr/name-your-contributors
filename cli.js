@@ -31,7 +31,7 @@ Promise.try(() => {
   if (cli.input.length === 0) {
     return Promise.try(() => {
       return pify(gitconfig)(process.cwd())
-    }).then(config => {
+    }).then((config) => {
       if (config && config.remote && config.remote.origin && config.remote.origin.url) {
         return config.remote.origin.url.split(':')[1].split('.git')[0].split('/')
       }
