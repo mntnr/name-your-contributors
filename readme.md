@@ -1,6 +1,10 @@
-# name-your-contributors [![Build Status](https://travis-ci.org/RichardLitt/name-your-contributors.svg?branch=master)](https://travis-ci.org/RichardLitt/name-your-contributors)
+# name-your-contributors
+
+[![Build Status](https://travis-ci.org/RichardLitt/name-your-contributors.svg?branch=master)](https://travis-ci.org/RichardLitt/name-your-contributors)
 
 > Name your GitHub contributors; get commits, issues, and comments
+
+`name-your-contributors` gets all of the code reviewers, commenters, issue and PR creators from your organization or repo.
 
 ## Install
 
@@ -14,7 +18,9 @@ You also need to get a GitHub application token, if you are going to be hitting 
 
 Set the token with the variable name `$GITHUB_OGN_TOKEN` somewhere in your `.bash_profile` or `.bashrc` files. These are normally hidden in your root directory. Alternatively, you can provide it in the CLI each time you run the command by calling `GITHUB_OGN_TOKEN=<token> name-your-contributors`.
 
-The environmental variable is used by several of `name-your-contributor`'s dependencies:
+#### Other repositories using this token
+
+The environmental variable is also used by several of `name-your-contributor`'s similar repositories:
 
  * [get-code-reviewers](https://github.com/RichardLitt/get-code-reviewers) - Get users who comment on PRs or code for OS GitHub repos.
  * [get-issue-commenters](https://github.com/richardlitt/get-issue-commenters) - Get users who comment on issues for OS GitHub repos.

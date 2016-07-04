@@ -36,18 +36,16 @@
   "dependencies": {
     "bluebird": "^3.3.5",
     "format-gh-users": "^1.0.1",
-    "get-code-reviewers": "^0.1.3",
-    "get-github-issue-creators": "0.0.3",
-    "get-github-pr-creators": "0.0.4",
-    "get-issue-commenters": "^1.0.4",
+    "get-github-user": "0.0.4",
     "gitconfiglocal": "^2.0.1",
     "meow": "^3.7.0",
-    "pify": "^2.3.0"
+    "pify": "^2.3.0",
+    "sort-alphabetic": "0.0.0"
   },
   "devDependencies": {
-    "eslint": "^2.8.0",
-    "standard": "^6.0.8",
-    "xo": "^0.14.0"
+    "eslint": "^3.0.0",
+    "standard": "^7.1.2",
+    "xo": "^0.16.0"
   },
   "coordinates": [
     42.3957432,
