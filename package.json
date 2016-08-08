@@ -34,18 +34,20 @@
     "contributing"
   ],
   "dependencies": {
-    "bluebird": "^3.3.5",
+    "bluebird": "^3.4.1",
     "depaginate": "0.0.8",
-    "format-gh-users": "^1.0.1",
+    "format-gh-users": "^1.0.2",
     "get-github-user": "0.0.4",
     "gitconfiglocal": "^2.0.1",
+    "lodash": "^4.14.2",
     "meow": "^3.7.0",
     "moment": "^2.14.1",
+    "octokat": "^0.5.0-beta.0",
     "pify": "^2.3.0",
     "sort-alphabetic": "0.0.0"
   },
   "devDependencies": {
-    "eslint": "^3.0.0",
+    "eslint": "^3.2.2",
     "standard": "^7.1.2",
     "xo": "^0.16.0"
   },
