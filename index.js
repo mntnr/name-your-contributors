@@ -41,7 +41,7 @@ function getRepositories (org, opts, token) {
     .then(_.flatten.bind(_))
     .filter((response) => (opts.repo) ? response.name === opts.repo : response)
     .catch((err) => {
-      console.log('Unable to get repositoes', err)
+      console.log('Unable to get repositories', err)
     })
 }
 
