@@ -71,6 +71,24 @@ function filterResponses (response, opts) {
     .then(response => sortAlphabetic(_.uniq(_.without(response, undefined))))
 }
 
+function getIssueCreators (response, org, opts) {
+  return Promise.resolve().then(() => response)
+  .map((repo) => {
+    return depaginate(function (opts) {
+      return octo.repos(opts.org, opts.repoName).issues.fetch(opts)
+    }, {
+      org: org,
+      repoName: repo.name,
+      since: opts.since || '1980-01-01T00:01:01Z'
+    })
+  })
+  .then(_.flatten.bind(_))
+  .catch(function (err) {
+    console.log('Unable to get issue creators', err)
+  })
+}
+
+
 function getIssueCommenters (response, org, opts) {
   return Promise.resolve().then(() => response)
   .map((repo) => {
@@ -86,61 +104,6 @@ function getIssueCommenters (response, org, opts) {
   .catch(function (err) {
     console.log('Unable to get issue commenters', err)
   })
-}
-
-function getIssueCreators (response, org, opts) {
-  return Promise.resolve().then(() => response)
-  .map((repo) => {
-    return depaginate(function (opts) {
-      return octo.repos(opts.org, opts.repoName).issues.comments.fetch(opts)
-    }, {
-      org: org,
-      repoName: repo.name,
-      since: opts.since || '1980-01-01T00:01:01Z'
-    })
-  })
-  .then(_.flatten.bind(_))
-  .catch(function (err) {
-    console.log('Unable to get issue creators', err)
-  })
-}
-
-function getPullRequestReviewers (response, org, opts) {
-  return Promise.resolve().then(() => response)
-    .map((repo) => {
-      return depaginate(function (opts) {
-        return octo.repos(opts.org, opts.repoName).comments.fetch(opts)
-      }, {
-        org: org,
-        repoName: repo.name,
-        // Weird issue with since being mandatory. TODO Check?
-        since: opts.since || '1980-01-01T00:01:01Z',
-        per_page: 100
-      })
-    })
-    .then(_.flatten.bind(_))
-    .catch((err) => {
-      console.log('Unable to get code reviewers', err)
-    })
-}
-
-function getCommentReviewers (response, org, opts) {
-  return Promise.resolve().then(() => response)
-    .map((repo) => {
-      return depaginate(function (opts) {
-        return octo.repos(opts.org, opts.repoName).comments.fetch(opts)
-      }, {
-        org: org,
-        repoName: repo.name,
-        // Weird issue with since being mandatory. TODO Check?
-        since: opts.since || '1980-01-01T00:01:01Z',
-        per_page: 100
-      })
-    })
-    .then(_.flatten.bind(_))
-    .catch((err) => {
-      console.log('Unable to get code reviewers', err)
-    })
 }
 
 function getPRCreators (response, org, opts) {
@@ -162,23 +125,61 @@ function getPRCreators (response, org, opts) {
     })
 }
 
+function getPRReviewers (response, org, opts) {
+  return Promise.resolve().then(() => response)
+    .map((repo) => {
+      return depaginate(function (opts) {
+        return octo.repos(opts.org, opts.repoName).pulls.comments.fetch(opts)
+      }, {
+        org: org,
+        repoName: repo.name,
+        // Weird issue with since being mandatory. TODO Check?
+        since: opts.since || '1980-01-01T00:01:01Z',
+        per_page: 100
+      })
+    })
+    .then(_.flatten.bind(_))
+    .catch((err) => {
+      console.log('Unable to get code reviewers', err)
+    })
+}
+
+function getCommenters (response, org, opts) {
+  return Promise.resolve().then(() => response)
+    .map((repo) => {
+      return depaginate(function (opts) {
+        return octo.repos(opts.org, opts.repoName).comments.fetch(opts)
+      }, {
+        org: org,
+        repoName: repo.name,
+        // Weird issue with since being mandatory. TODO Check?
+        since: opts.since || '1980-01-01T00:01:01Z',
+        per_page: 100
+      })
+    })
+    .then(_.flatten.bind(_))
+    .catch((err) => {
+      console.log('Unable to get code reviewers', err)
+    })
+}
+
 module.exports = function (org, opts, token) {
   return Promise.resolve(getRepositories(org, opts, token))
   .then((response) => {
     return Promise.join(
-      getCommentReviewers(response, org, opts),
-      getPullRequestReviewers(response, org, opts),
-      getIssueCommenters(response, org, opts),
       getIssueCreators(response, org, opts),
+      getIssueCommenters(response, org, opts),
       getPRCreators(response, org, opts),
+      getPRReviewers(response, org, opts),
+      getCommenters(response, org, opts),
       function (
-        commentReviewers,
+        issueCreators,
+        issueCommenters,
+        pullRequesters
         pullRequestReviewers,
         commenters,
-        creators,
-        pullRequesters
         ) {
-        var union = _.union(commentReviewers, pullRequestReviewers, commenters, creators, pullRequesters)
+        var union = _.union(issueCommenters, issueCommenters, pullRequesters, pullRequestReviewers, commenters)
         return union
       })
       .then((users) => filterResponses(users, opts))
