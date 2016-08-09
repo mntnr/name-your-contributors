@@ -166,23 +166,15 @@ function getCommenters (response, org, opts) {
 module.exports = function (org, opts, token) {
   return Promise.resolve(getRepositories(org, opts, token))
   .then((response) => {
-    return Promise.join(
+    return Promise.all([
       getIssueCreators(response, org, opts),
       getIssueCommenters(response, org, opts),
       getPRCreators(response, org, opts),
       getPRReviewers(response, org, opts),
-      getCommenters(response, org, opts),
-      function (
-        issueCreators,
-        issueCommenters,
-        pullRequesters,
-        pullRequestReviewers,
-        commenters
-        ) {
-        var union = _.union(issueCommenters, issueCommenters, pullRequesters, pullRequestReviewers, commenters)
-        return union
-      })
-      .then((users) => filterResponses(users, opts))
-      .then((users) => formatGhUsers(users))
+      getCommenters(response, org, opts)
+    ])
+    .map((res) => filterResponses(res, opts))
+    .then((users) => formatGhUsers(users))
+    .then((res) => _.union(res))
   })
 }
