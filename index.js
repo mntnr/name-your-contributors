@@ -175,9 +175,9 @@ module.exports = function (org, opts, token) {
       function (
         issueCreators,
         issueCommenters,
-        pullRequesters
+        pullRequesters,
         pullRequestReviewers,
-        commenters,
+        commenters
         ) {
         var union = _.union(issueCommenters, issueCommenters, pullRequesters, pullRequestReviewers, commenters)
         return union
