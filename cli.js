@@ -54,6 +54,6 @@ Promise.try(() => {
   }
 
   return ghContrib(cli.input[0], cli.flags)
-}).map(function (response) {
+}).then(function (response) {
   console.log(response)
 })
