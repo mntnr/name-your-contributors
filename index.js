@@ -1,14 +1,19 @@
 'use strict'
 
+const fs = require('fs')
+const Promise = require('bluebird')
 const _ = require('lodash')
 const depaginate = require('depaginate')
 const formatGhUsers = require('format-gh-users')
 const getGithubUser = require('get-github-user')
 const moment = require('moment')
 const Octokat = require('octokat')
-const Promise = require('bluebird')
 const sortAlphabetic = require('sort-alphabetic')
-var octo
+const readdir = Promise.promisify(fs.readdir, fs)
+const readFile = Promise.promisify(fs.readFile, fs)
+const writeFile = Promise.promisify(fs.writeFile)
+const mkdir = Promise.promisify(require('mkdirp'))
+let octo
 
 function getRepositories (org, opts, token) {
   octo = new Octokat({
@@ -23,7 +28,7 @@ function getRepositories (org, opts, token) {
     throw new Error('\'until\' flag is an invalid date.')
   }
 
-  return Promise.resolve(getGithubUser(org))
+  return getGithubUser(org)
     .then((user) => {
       if (user.length === 0) {
         throw new Error(org + 'is not a valid GitHub user')
@@ -31,27 +36,26 @@ function getRepositories (org, opts, token) {
         return user
       }
     })
-    .map((user) => {
-      return depaginate(function (opts) {
-        return (opts.org.type === 'Organization') ? octo.orgs(org).repos.fetch(opts) : octo.users(org).repos.fetch(opts)
+    .then((user) => depaginate((opts) => {
+      if (opts.org.type === 'Organization') {
+        return octo.orgs(org).repos.fetch(opts)
+      }
+      return octo.users(org).repos.fetch(opts)
+
       }, {
         org: user
-      })
-    })
+      }))
     .then(_.flatten.bind(_))
-    .filter((response) => (opts.repo) ? response.name === opts.repo : response)
+    .filter((resp) => (opts.repo) ? resp.name === opts.repo : resp)
     .catch((err) => {
       console.log('Unable to get repositories', err)
     })
 }
 
 function filterResponses (response, opts) {
-  return Promise.resolve()
-    .then(() => {
-      return response
-    })
+  return Promise.resolve(response)
     // Make sure that the responses are in the specified time frame
-    .filter(function (response) {
+    .filter((response) => {
       if (opts.since && opts.until && moment(response.updatedAt).isBetween(opts.since, opts.until)) {
         return response
       } else if (opts.since && !opts.until && moment(response.updatedAt).isAfter(opts.since)) {
@@ -72,18 +76,16 @@ function filterResponses (response, opts) {
 }
 
 function getIssueCreators (response, org, opts) {
-  return Promise.resolve().then(() => response)
-  .map((repo) => {
-    return depaginate(function (opts) {
+  return Promise.resolve(response)
+    .map((repo) => depaginate((opts) => {
       return octo.repos(opts.org, opts.repoName).issues.fetch(opts)
     }, {
       org: org,
       repoName: repo.name,
       since: opts.since || '1980-01-01T00:01:01Z'
-    })
-  })
+    }))
   .then(_.flatten.bind(_))
-  .catch(function (err) {
+  .catch((err) => {
     console.log('Unable to get issue creators', err)
   })
 }
@@ -107,9 +109,8 @@ function getIssueCommenters (response, org, opts) {
 }
 
 function getPRCreators (response, org, opts) {
-  return Promise.resolve().then(() => response)
-    .map((repo) => {
-      return depaginate(function (opts) {
+  return Promise.resolve(response)
+    .map((repo) => depaginate((opts) => {
         return octo.repos(opts.org, opts.repoName).pulls.fetch(opts)
       }, {
         org: org,
@@ -117,8 +118,7 @@ function getPRCreators (response, org, opts) {
         // Weird issue with since being mandatory. TODO Check?
         since: opts.since || '2000-01-01T00:01:01Z',
         state: 'all'
-      })
-    })
+      }))
     .then(_.flatten.bind(_))
     .catch((err) => {
       console.log('Unable to get pull requesters', err)
@@ -126,9 +126,8 @@ function getPRCreators (response, org, opts) {
 }
 
 function getPRReviewers (response, org, opts) {
-  return Promise.resolve().then(() => response)
-    .map((repo) => {
-      return depaginate(function (opts) {
+  return Promise.resolve(response)
+    .map((repo) => depaginate((opts) => {
         return octo.repos(opts.org, opts.repoName).pulls.comments.fetch(opts)
       }, {
         org: org,
@@ -136,8 +135,7 @@ function getPRReviewers (response, org, opts) {
         // Weird issue with since being mandatory. TODO Check?
         since: opts.since || '1980-01-01T00:01:01Z',
         per_page: 100
-      })
-    })
+      }))
     .then(_.flatten.bind(_))
     .catch((err) => {
       console.log('Unable to get code reviewers', err)
@@ -145,9 +143,8 @@ function getPRReviewers (response, org, opts) {
 }
 
 function getCommenters (response, org, opts) {
-  return Promise.resolve().then(() => response)
-    .map((repo) => {
-      return depaginate(function (opts) {
+  return Promise.resolve(response)
+    .map((repo) => depaginate((opts) => {
         return octo.repos(opts.org, opts.repoName).comments.fetch(opts)
       }, {
         org: org,
@@ -155,26 +152,75 @@ function getCommenters (response, org, opts) {
         // Weird issue with since being mandatory. TODO Check?
         since: opts.since || '1980-01-01T00:01:01Z',
         per_page: 100
-      })
-    })
+      }))
     .then(_.flatten.bind(_))
     .catch((err) => {
       console.log('Unable to get code reviewers', err)
     })
 }
 
+
+function collect (val, org, name) {
+  return val
+    .then((res) => writeFile(`./data/${org}/${name}.json`, JSON.stringify(res, null, 2)))
+    .then(() => {
+      console.log('wrote %s', name)
+    })
+}
+
+function saveResponses (org, opts, token) {
+  return mkdir(`./data/${org}`)
+    .then(() => getRepositories(org, opts, token))
+    .then((response) => {
+      console.log('Got response')
+
+      return collect(
+        getIssueCreators(response, org, opts),
+        org,
+        'issue_creators'
+      )
+        .then(() => {
+          return collect(
+            getIssueCommenters(response, org, opts),
+            org,
+            'issue_commenters'
+          )
+        })
+        .then(() => {
+          return collect(
+            getPRCreators(response, org, opts),
+            org,
+            'pr_creators'
+          )
+        })
+        .then(() => {
+          return collect(
+            getPRReviewers(response, org, opts),
+            org,
+            'pr_reviewers'
+          )
+        })
+        .then(() => {
+          return collect(
+            getCommenters(response, org, opts),
+            org,
+            'commenters'
+          )
+        })
+    })
+    .then(() => {
+      console.log('Done collecting data.')
+    })
+}
+
+
 module.exports = function (org, opts, token) {
-  return Promise.resolve(getRepositories(org, opts, token))
-  .then((response) => {
-    return Promise.all([
-      getIssueCreators(response, org, opts),
-      getIssueCommenters(response, org, opts),
-      getPRCreators(response, org, opts),
-      getPRReviewers(response, org, opts),
-      getCommenters(response, org, opts)
-    ])
-    .map((res) => filterResponses(res, opts))
+  return Promise.resolve(saveResponses(org, opts, token))
+    .then(() => readdir(`./data/${org}`))
+    .map((res) => readFile(`./data/${org}/${res}`, 'utf8'))
+    .map((res) => JSON.parse(res))
+    .reduce((prev, cur) => prev.concat(cur), [])
+    .then((res) => filterResponses(res, opts))
     .then((users) => formatGhUsers(users))
     .then((res) => _.union(res))
-  })
 }
