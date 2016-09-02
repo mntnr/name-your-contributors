@@ -1,14 +1,18 @@
 'use strict'
 
 const fs = require('fs')
+const Promise = require('bluebird')
 const _ = require('lodash')
 const depaginate = require('depaginate')
 const formatGhUsers = require('format-gh-users')
 const getGithubUser = require('get-github-user')
 const moment = require('moment')
 const Octokat = require('octokat')
-const Promise = require('bluebird')
 const sortAlphabetic = require('sort-alphabetic')
+const readdir = Promise.promisify(fs.readdir, fs)
+const readFile = Promise.promisify(fs.readFile, fs)
+const writeFile = Promise.promisify(fs.writeFile)
+const mkdir = Promise.promisify(require('mkdirp'))
 let octo
 
 function getRepositories (org, opts, token) {
@@ -155,56 +159,68 @@ function getCommenters (response, org, opts) {
     })
 }
 
-module.exports = function (org, opts, token) {
-  return getRepositories(org, opts, token)
+
+function collect (val, org, name) {
+  return val
+    .then((res) => writeFile(`./data/${org}/${name}.json`, JSON.stringify(res, null, 2)))
+    .then(() => {
+      console.log('wrote %s', name)
+    })
+}
+
+function saveResponses (org, opts, token) {
+  return mkdir(`./data/${org}`)
+    .then(() => getRepositories(org, opts, token))
     .then((response) => {
-      console.log('got response')
+      console.log('Got response')
 
       return collect(
         getIssueCreators(response, org, opts),
+        org,
         'issue_creators'
       )
         .then(() => {
           return collect(
             getIssueCommenters(response, org, opts),
+            org,
             'issue_commenters'
           )
         })
         .then(() => {
           return collect(
             getPRCreators(response, org, opts),
+            org,
             'pr_creators'
           )
         })
         .then(() => {
           return collect(
             getPRReviewers(response, org, opts),
+            org,
             'pr_reviewers'
           )
         })
         .then(() => {
           return collect(
             getCommenters(response, org, opts),
+            org,
             'commenters'
           )
         })
     })
     .then(() => {
-      console.log('done')
+      console.log('Done collecting data.')
     })
-    // .map((res) => filterResponses(res, opts))
-    // .then((users) => formatGhUsers(users))
-    // .then((res) => _.union(res))
 }
 
-const writeFile = Promise.promisify(fs.writeFile)
 
-function collect (val, name) {
-  return val
-    .then((res) => {
-      return writeFile(`./results/${name}.json`, JSON.stringify(res, null, 2))
-    })
-    .then(() => {
-      console.log('wrote %s', name)
-    })
+module.exports = function (org, opts, token) {
+  return Promise.resolve(saveResponses(org, opts, token))
+    .then(() => readdir(`./data/${org}`))
+    .map((res) => readFile(`./data/${org}/${res}`, 'utf8'))
+    .map((res) => JSON.parse(res))
+    .reduce((prev, cur) => prev.concat(cur), [])
+    .then((res) => filterResponses(res, opts))
+    .then((users) => formatGhUsers(users))
+    .then((res) => _.union(res))
 }
