@@ -31,7 +31,7 @@ function getRepositories (org, opts, token) {
   return getGithubUser(org)
     .then((user) => {
       if (user.length === 0) {
-        throw new Error(org + 'is not a valid GitHub user')
+        throw new Error(org + ' is not a valid GitHub user')
       } else {
         return user
       }
