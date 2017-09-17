@@ -41,10 +41,9 @@ function getRepositories (org, opts, token) {
         return octo.orgs(org).repos.fetch(opts)
       }
       return octo.users(org).repos.fetch(opts)
-
-      }, {
-        org: user
-      }))
+    }, {
+      org: user
+    }))
     .then(_.flatten.bind(_))
     .filter((resp) => (opts.repo) ? resp.name === opts.repo : resp)
     .catch((err) => {
@@ -90,7 +89,6 @@ function getIssueCreators (response, org, opts) {
   })
 }
 
-
 function getIssueCommenters (response, org, opts) {
   return Promise.resolve().then(() => response)
   .map((repo) => {
@@ -111,14 +109,14 @@ function getIssueCommenters (response, org, opts) {
 function getPRCreators (response, org, opts) {
   return Promise.resolve(response)
     .map((repo) => depaginate((opts) => {
-        return octo.repos(opts.org, opts.repoName).pulls.fetch(opts)
-      }, {
-        org: org,
-        repoName: repo.name,
+      return octo.repos(opts.org, opts.repoName).pulls.fetch(opts)
+    }, {
+      org: org,
+      repoName: repo.name,
         // Weird issue with since being mandatory. TODO Check?
-        since: opts.since || '2000-01-01T00:01:01Z',
-        state: 'all'
-      }))
+      since: opts.since || '2000-01-01T00:01:01Z',
+      state: 'all'
+    }))
     .then(_.flatten.bind(_))
     .catch((err) => {
       console.log('Unable to get pull requesters', err)
@@ -128,14 +126,14 @@ function getPRCreators (response, org, opts) {
 function getPRReviewers (response, org, opts) {
   return Promise.resolve(response)
     .map((repo) => depaginate((opts) => {
-        return octo.repos(opts.org, opts.repoName).pulls.comments.fetch(opts)
-      }, {
-        org: org,
-        repoName: repo.name,
+      return octo.repos(opts.org, opts.repoName).pulls.comments.fetch(opts)
+    }, {
+      org: org,
+      repoName: repo.name,
         // Weird issue with since being mandatory. TODO Check?
-        since: opts.since || '1980-01-01T00:01:01Z',
-        per_page: 100
-      }))
+      since: opts.since || '1980-01-01T00:01:01Z',
+      per_page: 100
+    }))
     .then(_.flatten.bind(_))
     .catch((err) => {
       console.log('Unable to get code reviewers', err)
@@ -145,20 +143,19 @@ function getPRReviewers (response, org, opts) {
 function getCommenters (response, org, opts) {
   return Promise.resolve(response)
     .map((repo) => depaginate((opts) => {
-        return octo.repos(opts.org, opts.repoName).comments.fetch(opts)
-      }, {
-        org: org,
-        repoName: repo.name,
+      return octo.repos(opts.org, opts.repoName).comments.fetch(opts)
+    }, {
+      org: org,
+      repoName: repo.name,
         // Weird issue with since being mandatory. TODO Check?
-        since: opts.since || '1980-01-01T00:01:01Z',
-        per_page: 100
-      }))
+      since: opts.since || '1980-01-01T00:01:01Z',
+      per_page: 100
+    }))
     .then(_.flatten.bind(_))
     .catch((err) => {
       console.log('Unable to get code reviewers', err)
     })
 }
-
 
 function collect (val, org, name) {
   return val
@@ -212,7 +209,6 @@ function saveResponses (org, opts, token) {
       console.log('Done collecting data.')
     })
 }
-
 
 module.exports = function (org, opts, token) {
   return Promise.resolve(saveResponses(org, opts, token))
