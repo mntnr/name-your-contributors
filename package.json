@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "2.0.0",
+  "version": "0.0.0-development",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "RichardLitt/name-your-contributors",
@@ -11,7 +11,9 @@
   },
   "bin": "cli.js",
   "scripts": {
-    "test": "standard && ava"
+    "lint": "standard",
+    "test": "standard && ava",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "keywords": [
     "cli-app",
@@ -34,6 +36,7 @@
     "contributing"
   ],
   "dependencies": {
+    "ava": "^0.22.0",
     "bluebird": "^3.4.1",
     "depaginate": "0.0.8",
     "format-gh-users": "^1.0.2",
@@ -50,7 +53,8 @@
   "devDependencies": {
     "eslint": "^4.6.1",
     "standard": "^10.0.3",
-    "xo": "^0.18.2"
+    "xo": "^0.18.2",
+    "semantic-release": "^8.0.0"
   },
   "coordinates": [
     45.5231596,

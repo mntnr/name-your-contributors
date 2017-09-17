@@ -19,4 +19,3 @@ test('With a constrained since and until', t => {
     t.same(result, ['[@bnvk](//github.com/bnvk) (Brennan Novak)', '[@jdittrich](//github.com/jdittrich)'])
   })
 })
-

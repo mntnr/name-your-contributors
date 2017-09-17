@@ -36,8 +36,6 @@ Promise.try(() => {
         return config.remote.origin.url.split(':')[1].split('.git')[0].split('/')
       }
     })
-  } else {
-    return
   }
 }).then((res) => {
   if (res) {
