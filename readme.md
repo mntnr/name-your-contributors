@@ -1,5 +1,7 @@
 # name-your-contributors
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/RichardLitt/name-your-contributors.svg)](https://greenkeeper.io/)
+
 [![Build Status](https://travis-ci.org/RichardLitt/name-your-contributors.svg?branch=master)](https://travis-ci.org/RichardLitt/name-your-contributors)
 
 > Name your GitHub contributors; get commits, issues, and comments
