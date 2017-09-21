@@ -8,7 +8,7 @@ test('With minimal since and until', t => {
   }).then(result => {
     t.same(result, [])
   })
-	// TODO add tests
+  // TODO add tests
 })
 
 test('With a constrained since and until', t => {

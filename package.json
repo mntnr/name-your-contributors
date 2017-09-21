@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "0.0.0-development",
+  "version": "0.0.1",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "RichardLitt/name-your-contributors",
@@ -9,7 +9,7 @@
     "email": "richard.littauer@gmail.com",
     "url": "burntfen.com"
   },
-  "bin": "cli.js",
+  "bin": "src/cli.js",
   "scripts": {
     "lint": "standard",
     "test": "standard && ava",
