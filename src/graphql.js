@@ -4,8 +4,8 @@ const https = require('https');
 
 /** Escape strings to prevent injection attacks. Other types aren't an issue. */
 const escapeArgValue = val => {
-	if ('string' === typeof(val)) {
-		return  '"' + encodeURIComponent(val) + '"';
+	if ('string' === typeof (val)) {
+		return '"' + encodeURIComponent(val) + '"';
 	} else {
 		return val;
 	}
@@ -14,7 +14,7 @@ const escapeArgValue = val => {
 const argsString = args => {
 	const keys = Object.keys(args);
 	if (keys.length === 0) {
-		return "";
+		return '';
 	} else {
 		const s = keys.map(k => {
 			return encodeURIComponent(k) + ': ' + escapeArgValue(args[k]) + ',';
@@ -25,7 +25,7 @@ const argsString = args => {
 
 const childrenString = (children) => {
 	if (children.length === 0) {
-		return "";
+		return '';
 	} else {
 		const s = children.map(itemToString).
 					reduce((acc, next) => acc + next + '\n', '');
@@ -34,7 +34,7 @@ const childrenString = (children) => {
 };
 
 const itemToString = ({name, args, children}) => {
-	return encodeURIComponent(name) + argsString(args) + childrenString(children)
+	return encodeURIComponent(name) + argsString(args) + childrenString(children);
 };
 
 /**
@@ -63,7 +63,7 @@ const queryNode = (name, args = {}, children = []) => {
 /** Converts a queryNode object into a valid graphql query string according to
 Github's conventions. */
 const formatQuery = item => '{"query": ' +
-			JSON.stringify('query{' + item.toString() + '}') +'}';
+			JSON.stringify('query{' + item.toString() + '}') + '}';
 
 /**
 	* Returns a promise which will yeild a query result.
@@ -72,7 +72,7 @@ const formatQuery = item => '{"query": ' +
 	*/
 const executequery = (token, query) => {
 	return new Promise((resolve, reject) => {
-		let queryResponse = "";
+		let queryResponse = '';
 		const headers = {
 			'Content-Type': 'application/x-www-form-urlencoded',
 			'Accept': '*/*',
@@ -84,7 +84,7 @@ const executequery = (token, query) => {
 				method: 'post',
 				headers: headers,
 				host: 'api.github.com',
-				path : '/graphql'
+				path: '/graphql'
 			},
 			res => {
 				res.on('error', reject);
