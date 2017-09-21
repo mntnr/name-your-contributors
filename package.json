@@ -56,6 +56,9 @@
     "xo": "^0.18.2",
     "semantic-release": "^8.0.0"
   },
+  "engines": {
+    "nodejs": ">=6.11.3"
+  },
   "coordinates": [
     45.5231596,
     -73.5870259
