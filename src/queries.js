@@ -26,8 +26,11 @@ const everything = (repoName, ownerName) =>
 			.addChild(node('pullRequests', {first: 100}, multiQs))
 			.addChild(node('issues', {first: 100}, multiQs));
 
-const timeFilter = (before = new Date(), after = new Date(0)) =>
-			data => data.filter(x => after <= x.createdAt <= before);
+const timeFilter = (before, after) =>
+			data => data.filter(x => {
+				const date = new Date(x.createdAt);
+				return after <= date && date <= before;
+	});
 
 const users = arr =>
 	arr.map(x => x.author)
@@ -42,15 +45,21 @@ const comments = x => flatten(x.map(x => x.comments.nodes));
 
 const uniquify = xs => Array.from(new Map(xs).entries());
 
-const cleanData = result => {
+const cleanData = (result, b, a) => {
+	const before = b && new Date(b) || new Date();
+	const after = a && new Date(a) || new Date(0);
+
+	const tf = timeFilter(before, after);
+	const process = x => uniquify(users(tf(x)));
+
 	const prs = result.data.repository.pullRequests.nodes;
 	const issues = result.data.repository.issues.nodes;
 
 	return {
-		prCreators: uniquify(users(prs)),
-		prCommentators: uniquify(users(comments(prs))),
-		issueCreators: uniquify(users(issues)),
-		issueCommentators: uniquify(users(comments(issues)))
+		prCreators: process(prs),
+		prCommentators: process(comments(prs)),
+		issueCreators: process(issues),
+		issueCommentators: process(comments(issues))
 	};
 };
 

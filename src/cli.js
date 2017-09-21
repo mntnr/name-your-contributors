@@ -32,7 +32,7 @@ const token = process.env.GITHUB_TOKEN;
 if (cli.flags.u && cli.flags.r && token) {
 	graphql.executequery(token, queries.everything(cli.flags.r, cli.flags.u))
 		.then(JSON.parse)
-		.then(queries.cleanData)
+		.then(json => queries.cleanData(json, cli.flags.b, cli.flags.a))
 		.then(console.log);
 } else {
 	console.error('You must currently specify both a user and a repo name. And provide a token.');
