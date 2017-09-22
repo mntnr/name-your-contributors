@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 const https = require('https');
 
@@ -23,12 +23,12 @@ const argsString = args => {
 	}
 };
 
-const childrenString = (children) => {
+const childrenString = children => {
 	if (children.length === 0) {
 		return '';
 	} else {
-		const s = children.map(itemToString).
-					reduce((acc, next) => acc + next + '\n', '');
+		const s = children.map(itemToString)
+					.reduce((acc, next) => acc + next + '\n', '');
 		return '{' + s + '}';
 	}
 };

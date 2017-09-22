@@ -30,7 +30,7 @@ const timeFilter = (before, after) =>
 			data => data.filter(x => {
 				const date = new Date(x.createdAt);
 				return after <= date && date <= before;
-	});
+			});
 
 const users = arr =>
 	arr.map(x => x.author)
