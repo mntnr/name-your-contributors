@@ -65,5 +65,8 @@ const cleanData = (result, b, a) => {
 
 module.exports = {
 	everything,
+	timeFilter,
+	flatten,
+	users,
 	cleanData
 };

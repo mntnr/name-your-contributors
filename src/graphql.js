@@ -92,7 +92,7 @@ const executequery = (token, query) => {
 					queryResponse += chunk;
 				});
 				res.on('end', () => {
-					if (res.statusCode === '200') {
+					if (res.statusCode === 200) {
 						resolve(queryResponse);
 					} else {
 						reject({
@@ -109,7 +109,10 @@ const executequery = (token, query) => {
 	});
 };
 
+const validateResponse = null;
+
 module.exports = {
 	executequery,
+	validateResponse,
 	queryNode
 };
