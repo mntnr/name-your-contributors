@@ -92,7 +92,15 @@ const executequery = (token, query) => {
 					queryResponse += chunk;
 				});
 				res.on('end', () => {
-					resolve(queryResponse);
+					if (res.statusCode === '200') {
+						resolve(queryResponse);
+					} else {
+						reject({
+							statusCode: res.statusCode,
+							statusMessage: res.statusMessage,
+							responseBody: queryResponse
+						});
+					}
 				});
 			});
 		req.on('error', reject);

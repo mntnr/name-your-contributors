@@ -2,8 +2,7 @@
 'use strict';
 
 const meow = require('meow');
-const graphql = require('./graphql');
-const queries = require('./queries');
+const main = require('./index');
 
 const cli = meow([`
 	Usage
@@ -30,10 +29,15 @@ const cli = meow([`
 const token = process.env.GITHUB_TOKEN;
 
 if (cli.flags.u && cli.flags.r && token) {
-	graphql.executequery(token, queries.everything(cli.flags.r, cli.flags.u))
-		.then(JSON.parse)
-		.then(json => queries.cleanData(json, cli.flags.b, cli.flags.a))
-		.then(console.log);
+	main.queryAll({
+		token: token,
+		user: cli.flags.u,
+		repo: cli.flags.r,
+		before: cli.flags.b,
+		after: cli.flags.a
+	}).then(x => JSON.stringify(x, null, 2))
+		.then(console.log)
+		.catch(console.error);
 } else {
 	console.error('You must currently specify both a user and a repo name. And provide a token.');
 	process.exit(1);
