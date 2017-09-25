@@ -81,7 +81,6 @@ const uniquify = xs => Array.from(new Map(xs).entries());
 
 /** Parse repository query result and filter for date range. */
 const cleanRepo = (result, before, after) => {
-
 	const tf = timeFilter(before, after);
 	const process = x => uniquify(users(tf(x)));
 
@@ -106,25 +105,28 @@ const mergeRepoResults = repos =>
 					prCreators,
 					prCommentators,
 					issueCreators,
-					issueCommentators}) => {
-						return {
-							prCreators: mergeArrays(acc.prCreators, prCreators),
-							prCommentators: mergeArrays(acc.prCommentators, prCommentators),
-							issueCreators: mergeArrays(acc.issueCreators ,issueCreators),
-							issueCommentators: mergeArrays(acc.issueCommentators, issueCommentators)
-						}}, {
-							prCreators: [],
-							prCommentators: [],
-							issueCreators: [],
-							issueCommentators: []
-						});
+					issueCommentators
+				}
+			) => {
+				return {
+					prCreators: mergeArrays(acc.prCreators, prCreators),
+					prCommentators: mergeArrays(acc.prCommentators, prCommentators),
+					issueCreators: mergeArrays(acc.issueCreators, issueCreators),
+					issueCommentators: mergeArrays(acc.issueCommentators, issueCommentators)
+				};
+			}, {
+				prCreators: [],
+				prCommentators: [],
+				issueCreators: [],
+				issueCommentators: []
+			});
 
 /** Returns a flat list of repo names given the result of the organizations
 	* query.
 	*/
 const cleanOrgNames = data =>
-			flatten(data.organization.repositories.nodes).
-			map(x => x.name);
+			flatten(data.organization.repositories.nodes)
+			.map(x => x.name);
 
 const cleanOrgRepos = (data, before, after) => {
 	const repos = data.organization.repositories.nodes;

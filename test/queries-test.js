@@ -26,7 +26,7 @@ const dates = [
 ];
 
 const tf = q.timeFilter;
-const fdate = new Date("2017-09-24");
+const fdate = new Date('2017-09-24');
 
 test('Time filtering defaults', t => {
 	t.is(tf()(dates).length, 6);
@@ -36,7 +36,7 @@ test('Time filtering defaults', t => {
 
 test('time filtering granularity', t => {
 	t.is(tf(fdate, fdate)(dates).length, 0);
-	t.is(tf(new Date("2017-09-24T11:00"), new Date("2017"))(dates).length, 1);
+	t.is(tf(new Date('2017-09-24T11:00'), new Date('2017'))(dates).length, 1);
 });
 
 test('time filtering <=', t => {

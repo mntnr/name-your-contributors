@@ -114,7 +114,6 @@ const executequery = (token, query) => {
 	});
 };
 
-
 module.exports = {
 	executequery,
 	queryNode

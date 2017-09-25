@@ -1,37 +1,36 @@
 import test from 'ava';
 
 const main = require('../src/index');
-const queries = require('../src/queries');
 
 const token = process.env.GITHUB_TOKEN;
 
 const contribPre = {
 	prCreators:
 	new Map([
-		['dignifiedquire', 'Friedel Ziegelmayer' ],
-		['jozefizso', 'Jozef Izso' ],
-		['greenkeeper', undefined ],
-		['RichardLitt', 'Richard Littauer' ] ]),
+		['dignifiedquire', 'Friedel Ziegelmayer'],
+		['jozefizso', 'Jozef Izso'],
+		['greenkeeper', undefined],
+		['RichardLitt', 'Richard Littauer']]),
 	prCommentators:
 	new Map([
-		['dignifiedquire', 'Friedel Ziegelmayer' ],
-		['RichardLitt', 'Richard Littauer' ] ]),
+		['dignifiedquire', 'Friedel Ziegelmayer'],
+		['RichardLitt', 'Richard Littauer']]),
 	issueCreators:
 	new Map([
-		['jbenet', 'Juan Benet' ],
-		['gr2m', 'Gregor Martynus' ],
-		['kentcdodds', 'Kent C. Dodds' ],
-		['RichardLitt', 'Richard Littauer' ],
-		['jywarren', 'Jeffrey Warren' ],
-		['diasdavid', 'David Dias' ] ]),
+		['jbenet', 'Juan Benet'],
+		['gr2m', 'Gregor Martynus'],
+		['kentcdodds', 'Kent C. Dodds'],
+		['RichardLitt', 'Richard Littauer'],
+		['jywarren', 'Jeffrey Warren'],
+		['diasdavid', 'David Dias']]),
 	issueCommentators:
 	new Map([
-		['RichardLitt', 'Richard Littauer' ],
-		['gr2m', 'Gregor Martynus' ],
-		['kentcdodds', 'Kent C. Dodds' ],
-		['jywarren', 'Jeffrey Warren' ],
-		['diasdavid', 'David Dias' ] ])
-}
+		['RichardLitt', 'Richard Littauer'],
+		['gr2m', 'Gregor Martynus'],
+		['kentcdodds', 'Kent C. Dodds'],
+		['jywarren', 'Jeffrey Warren'],
+		['diasdavid', 'David Dias']])
+};
 
 const emptyResponse = {
 	prCreators: [],
