@@ -14,6 +14,7 @@ const cli = meow([`
 		-r, --repo   - Repository to search
 		-u, --user   - User to which repository belongs
 		-o, --org    - Search all repos within this organisation
+		-t, --token  - GitHub auth token to use
 
 	Authentication
 		This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
@@ -32,9 +33,9 @@ const cli = meow([`
 	}
 }]);
 
-const token = process.env.GITHUB_TOKEN;
+const token = cli.flags.t || process.env.GITHUB_TOKEN;
 
-if (cli.flags.o) {
+if (cli.flags.o && token) {
 	main.nameContributorsToOrg({
 		token: token,
 		orgName: cli.flags.o,
