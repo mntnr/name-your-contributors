@@ -39,6 +39,13 @@ const organization = name =>
 								.addChild(node('nodes')
 													.addChild(node('name'))));
 
+const orgRepos = name =>
+			node('organization', {login: name})
+			.addChild(node('repositories', {first: 50})
+								.addChild(node('nodes')
+													.addChild(node('pullRequests', {first: 50}, multiQs))
+													.addChild(node('issues', {first: 50}, multiQs))));
+
 /////
 // Data Filtering (co-queries if you will)
 /////
@@ -78,8 +85,8 @@ const cleanRepo = (result, before, after) => {
 	const tf = timeFilter(before, after);
 	const process = x => uniquify(users(tf(x)));
 
-	const prs = result.repository.pullRequests.nodes;
-	const issues = result.repository.issues.nodes;
+	const prs = result.pullRequests.nodes;
+	const issues = result.issues.nodes;
 
 	return {
 		prCreators: process(prs),
@@ -115,14 +122,21 @@ const mergeRepoResults = repos =>
 /** Returns a flat list of repo names given the result of the organizations
 	* query.
 	*/
-const cleanOrg = data =>
+const cleanOrgNames = data =>
 			flatten(data.organization.repositories.nodes).
 			map(x => x.name);
+
+const cleanOrgRepos = (data, before, after) => {
+	const repos = data.organization.repositories.nodes;
+	return mergeRepoResults(repos.map(repo => cleanRepo(repo, before, after)));
+};
 
 module.exports = {
 	repository,
 	organization,
-	cleanOrg,
+	orgRepos,
+	cleanOrgRepos,
+	cleanOrgNames,
 	timeFilter,
 	uniquify,
 	flatten,

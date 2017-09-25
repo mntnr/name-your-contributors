@@ -12,7 +12,7 @@ const queries = require('./queries');
 	*/
 const nameYourContributors = ({token, user, repo, before, after}) =>
 			graphql.executequery(token, queries.repository(repo, user))
-			.then(json => queries.cleanRepo(json, before, after));
+			.then(json => queries.cleanRepo(json.repository, before, after));
 
 /** Returns a list of the names of all repos belonging to orgName.
 	*	@param token   - GitHub auth token
@@ -20,7 +20,7 @@ const nameYourContributors = ({token, user, repo, before, after}) =>
 	*/
 const reposForOrg = ({token, orgName}) =>
 			graphql.executequery(token, queries.organization(orgName))
-			.then(queries.cleanOrg);
+			.then(queries.cleanOrgNames);
 
 /** Returns contributions to all repos owned by orgName.
 	*	@param token   - GitHub auth token
@@ -29,18 +29,8 @@ const reposForOrg = ({token, orgName}) =>
 	* @param after   - only return contributions after this timestamp
 	*/
 const nameContributorsToOrg = ({token, orgName, before, after}) =>
-	reposForOrg({token, orgName})
-			.then(names =>
-						names.map(name =>
-											nameYourContributors({
-												user: orgName,
-												repo: name,
-												token,
-												before,
-												after
-											})))
-			.then(ps => Promise.all(ps))
-			.then(queries.mergeRepoResults);
+			graphql.executequery(token, queries.orgRepos(orgName))
+			.then(data => queries.cleanOrgRepos(data, before, after));
 
 module.exports = {
 	nameYourContributors,
