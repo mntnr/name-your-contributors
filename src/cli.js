@@ -13,6 +13,7 @@ const cli = meow([`
 		-b, --before - Get contributions before data
 		-r, --repo   - Repository to search
 		-u, --user   - User to which repository belongs
+		-o, --org    - Search all repos within this organisation
 
 	Examples
 		$ name-your-contributors -r ipfs -u ipfs --after=2016-01-15T00:20:24Z --before=2016-01-20T00:20:24Z
@@ -28,7 +29,15 @@ const cli = meow([`
 
 const token = process.env.GITHUB_TOKEN;
 
-if (cli.flags.u && cli.flags.r && token) {
+if (cli.flags.o) {
+	main.nameContributorsToOrg({
+		token: token,
+		orgName: cli.flags.o,
+		before: cli.flags.b,
+		after: cli.flags.after
+	}).then(json => JSON.stringify(json, null, 2))
+		.then(console.log);
+} else if (cli.flags.u && cli.flags.r && token) {
 	main.nameYourContributors({
 		token: token,
 		user: cli.flags.u,
