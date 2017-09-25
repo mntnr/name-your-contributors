@@ -32,6 +32,7 @@ const repository = (repoName, ownerName) =>
 			.addChild(node('pullRequests', {first: 100}, multiQs))
 			.addChild(node('issues', {first: 100}, multiQs));
 
+/** Returns a query which retrieves all repos from an organisation. */
 const organization = name =>
 			node('organization', {login: name})
 			.addChild(node('repositories', {first: 100})
@@ -42,6 +43,10 @@ const organization = name =>
 // Data Filtering (co-queries if you will)
 /////
 
+/** Returns a function that when given an array of objects with createAt keys,
+	* returns an array containing only those objects created between before and
+	* after.
+	*/
 const timeFilter = (before = new Date(), after = new Date(0)) =>
 			data => data.filter(x => {
 				const date = new Date(x.createdAt);
@@ -55,12 +60,19 @@ const users = arr =>
 			.filter(x => !(null === x || undefined === x))
 			.map(x => [x.login, x.name]);
 
+/** Returns an array which is the concatenation of arrays in the passed in
+	* array.
+	*/
 const flatten = arr => arr.reduce((acc, next) => acc.concat(next), []);
 
 const comments = x => flatten(x.map(x => x.comments.nodes));
 
+/** Given an array of arrays of length 2, returns an array of pairs where each
+	* first element occurs at most once.
+	*/
 const uniquify = xs => Array.from(new Map(xs).entries());
 
+/** Parse repository query result and filter for date range. */
 const cleanRepo = (result, before, after) => {
 
 	const tf = timeFilter(before, after);
@@ -77,6 +89,10 @@ const cleanRepo = (result, before, after) => {
 	};
 };
 
+const mergeArrays = (a, b) =>
+			uniquify(a.concat(b));
+
+/** Recursively merges all contributor maps in the list into a single map */
 const mergeRepoResults = repos =>
 			repos.reduce((
 				acc, {
@@ -85,10 +101,10 @@ const mergeRepoResults = repos =>
 					issueCreators,
 					issueCommentators}) => {
 						return {
-							prCreators: acc.prCreators.concat(prCreators),
-							prCommentators: acc.prCommentators.concat(prCommentators),
-							issueCreators: acc.issueCreators.concat(issueCreators),
-							issueCommentators: acc.issueCommentators.concat(issueCommentators)
+							prCreators: mergeArrays(acc.prCreators, prCreators),
+							prCommentators: mergeArrays(acc.prCommentators, prCommentators),
+							issueCreators: mergeArrays(acc.issueCreators ,issueCreators),
+							issueCommentators: mergeArrays(acc.issueCommentators, issueCommentators)
 						}}, {
 							prCreators: [],
 							prCommentators: [],
@@ -96,6 +112,9 @@ const mergeRepoResults = repos =>
 							issueCommentators: []
 						});
 
+/** Returns a flat list of repo names given the result of the organizations
+	* query.
+	*/
 const cleanOrg = data =>
 			flatten(data.organization.repositories.nodes).
 			map(x => x.name);

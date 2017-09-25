@@ -16,9 +16,19 @@ $ npm install --save name-your-contributors
 
 ### API Limits and setting up a GitHub Token
 
-You also need to get a GitHub application token, if you are going to be hitting the API much. Go here: https://github.com/settings/tokens. Click on "Generate New Token". It doesn't need to have any special scopes. Name the token something informative: `name-your-contributors` is a good name.
+You also need to get a GitHub application token to access the API. Go here:
+https://github.com/settings/tokens. Click on "Generate New Token". It doesn't
+need to have any special scopes. Name the token something informative:
+`name-your-contributors` is a good name.
 
-Set the token with the variable name `$GITHUB_OGN_TOKEN` somewhere in your `.bash_profile` or `.bashrc` files. These are normally hidden in your root directory. Alternatively, you can provide it in the CLI each time you run the command by calling `GITHUB_OGN_TOKEN=<token> name-your-contributors`.
+Set the token with the variable name `$GITHUB_TOKEN` before running the script:
+
+```sh
+$ export GITHUB_TOKEN=ab34e...
+```
+
+You can also set the var automatically in every session by adding the above line
+to your `.bashrc` file in your home directory.
 
 #### Other repositories using this token
 
@@ -32,19 +42,46 @@ The environmental variable is also used by several of `name-your-contributor`'s 
 
 ## Usage
 
-```js
-const nameYourContributors = require('name-your-contributors');
+### From Code
 
-nameYourContributors('ipfs', {
-  since: '2016-01-15T00:20:24Z'
-});
-//=> '[@RichardLitt](//github.com/RichardLitt) (Richard Littauer)'
+```js
+const nyc = require('name-your-contributors');
+
+nyc.nameYourContributors({
+	token: process.env.GITHUB_TOKEN,
+	user: 'RichardLitt,
+	repo: 'name-your-contributors'
+	}).then(//do something with the results
+	);
+
+nyc.nameContributorsToOrg({
+	token: process.env.GITHUB_TOKEN,
+	orgName: 'ipfs',
+	before: '2017-01-01,
+	after: '2016-01-01
+	}).then(...)
 ```
 
+### From the Command Line
+
+```sh
+$ npm -i -g name-your-contributors
+
+$ export GITHUB_TOKEN={your-token}
+$ name-your-contributors -u RichardLitt -r name-your-contributors
+
+$ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib.json
+```
 
 ## API
 
-### nameYourContributors(org, {since: since})
+### nameContributorsToOrg({orgName, token, before, after})
+
+#### token
+
+Type: `string`
+
+Github auth token
 
 #### org
 
@@ -53,42 +90,34 @@ Type: `string`
 The organization to traverse. If no organization is provided, the script
 will find the username and repo for the local git repository and use that.
 
-#### opts.since
+#### opts.after
 
 Type: `string`
 
-The ISO timestamp to get contributors since.
+The ISO timestamp to get contributors after.
 
-#### opts.until
+Any string that will be accepted by `new Date("...")` will work here as
+expected.
+
+#### opts.before
 
 Type: `string`
 
 Get contributors from before this ISO timestamp.
+
+### nameYourContributors({user, repo, token, before, after})
+
+#### opts.user
+
+Type: `string`
+
+Github user name to whom the repo belongs.
 
 #### opts.repo
 
 Type: `string`
 
 Only traverse the given repository.
-
-## CLI
-
-```
-$ npm install --global name-your-contributors
-```
-
-```
-$ name-your-contributors --help
-
-  Usage
-    $ name-your-contributors <input> [opts]
-
-  Examples
-    $ name-your-contributors ipfs --since=2016-01-15T00:20:24Z
-    [@RichardLitt](//github.com/RichardLitt) (Richard Littauer)
-
-```
-
 
 ## License
 
