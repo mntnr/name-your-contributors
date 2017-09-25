@@ -93,7 +93,12 @@ const executequery = (token, query) => {
 				});
 				res.on('end', () => {
 					if (res.statusCode === 200) {
-						resolve(queryResponse);
+						const json = JSON.parse(queryResponse);
+						if (json.data) {
+							resolve(json.data);
+						} else {
+							reject('Graphql error: ' + JSON.stringify(json, null, 2));
+						}
 					} else {
 						reject({
 							statusCode: res.statusCode,
@@ -103,16 +108,15 @@ const executequery = (token, query) => {
 					}
 				});
 			});
+		process.stdout.write(formatQuery(query))
 		req.on('error', reject);
 		req.write(formatQuery(query));
 		req.end();
 	});
 };
 
-const validateResponse = null;
 
 module.exports = {
 	executequery,
-	validateResponse,
 	queryNode
 };

@@ -29,7 +29,7 @@ const cli = meow([`
 const token = process.env.GITHUB_TOKEN;
 
 if (cli.flags.u && cli.flags.r && token) {
-	main.queryAll({
+	main.nameYourContributors({
 		token: token,
 		user: cli.flags.u,
 		repo: cli.flags.r,
