@@ -108,7 +108,6 @@ const executequery = (token, query) => {
 					}
 				});
 			});
-		process.stdout.write(formatQuery(query))
 		req.on('error', reject);
 		req.write(formatQuery(query));
 		req.end();

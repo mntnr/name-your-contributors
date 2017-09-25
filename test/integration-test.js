@@ -1,35 +1,37 @@
 import test from 'ava';
 
 const main = require('../src/index');
+const queries = require('../src/queries');
 
 const token = process.env.GITHUB_TOKEN;
 
 const contribPre = {
-	prCreators: [
-		['dignifiedquire', 'https://github.com/dignifiedquire'],
-		['jozefizso', 'https://github.com/jozefizso'],
-		['greenkeeper', 'https://github.com/apps/greenkeeper']
-	],
-	prCommentators: [
-		['dignifiedquire', 'https://github.com/dignifiedquire'],
-		['RichardLitt', 'https://github.com/RichardLitt']
-	],
-	issueCreators: [
-		['jbenet', 'https://github.com/jbenet'],
-		['gr2m', 'https://github.com/gr2m'],
-		['kentcdodds', 'https://github.com/kentcdodds'],
-		['RichardLitt', 'https://github.com/RichardLitt'],
-		['jywarren', 'https://github.com/jywarren'],
-		['diasdavid', 'https://github.com/diasdavid']
-	],
-	issueCommentators: [
-		['RichardLitt', 'https://github.com/RichardLitt'],
-		['gr2m', 'https://github.com/gr2m'],
-		['kentcdodds', 'https://github.com/kentcdodds'],
-		['jywarren', 'https://github.com/jywarren'],
-		['diasdavid', 'https://github.com/diasdavid']
-	]
-};
+	prCreators:
+	new Map([
+		['dignifiedquire', 'Friedel Ziegelmayer' ],
+		['jozefizso', 'Jozef Izso' ],
+		['greenkeeper', undefined ],
+		['RichardLitt', 'Richard Littauer' ] ]),
+	prCommentators:
+	new Map([
+		['dignifiedquire', 'Friedel Ziegelmayer' ],
+		['RichardLitt', 'Richard Littauer' ] ]),
+	issueCreators:
+	new Map([
+		['jbenet', 'Juan Benet' ],
+		['gr2m', 'Gregor Martynus' ],
+		['kentcdodds', 'Kent C. Dodds' ],
+		['RichardLitt', 'Richard Littauer' ],
+		['jywarren', 'Jeffrey Warren' ],
+		['diasdavid', 'David Dias' ] ]),
+	issueCommentators:
+	new Map([
+		['RichardLitt', 'Richard Littauer' ],
+		['gr2m', 'Gregor Martynus' ],
+		['kentcdodds', 'Kent C. Dodds' ],
+		['jywarren', 'Jeffrey Warren' ],
+		['diasdavid', 'David Dias' ] ])
+}
 
 const emptyResponse = {
 	prCreators: [],
@@ -39,7 +41,7 @@ const emptyResponse = {
 };
 
 test('No contributions in a single second', t => {
-	return main.queryAll({
+	return main.nameYourContributors({
 		token: token,
 		user: 'RichardLitt',
 		repo: 'name-your-contributors',
@@ -48,19 +50,36 @@ test('No contributions in a single second', t => {
 	}).then(result => t.deepEqual(result, emptyResponse));
 });
 
-// Note: this is not a very good test, since it will fail if one of the accounts
-// above is deleted (user will become null)
+const compareKeys = (x, k) =>
+	x[k].reduce((acc, next) => {
+		if (next[0]) {
+			return acc && contribPre[k].get(next[0]) === next[1];
+		} else {
+			return acc;
+		}
+	}, true);
+
+// Note: To be forward compatible we have to jump through some hoops because 1)
+// the order in which users comes back from the api changes (an actually seems
+// to change day to day, not just in principle), and 2) if a user account is
+// ever deleted, then those contributions will cease to come back, so we have to
+// be flexible.
 test('Contributors before a fixed date remain static', t => {
-	return main.queryAll({
+	return main.nameYourContributors({
 		token: token,
 		user: 'RichardLitt',
 		repo: 'name-your-contributors',
 		before: '2017-09-21'
-	}).then(result => t.deepEqual(result, contribPre));
+	}).then(result => {
+		t.true(compareKeys(result, 'prCreators'));
+		t.true(compareKeys(result, 'prCommentators'));
+		t.true(compareKeys(result, 'issueCreators'));
+		t.true(compareKeys(result, 'issueCommentators'));
+	});
 });
 
 test('Queries without tokens get rejected', t => {
-	return main.queryAll({
+	return main.nameYourContributors({
 		user: 'RichardLitt',
 		repo: 'name-your-contributors'
 	}).catch(error => t.is(error.statusCode, 401));
