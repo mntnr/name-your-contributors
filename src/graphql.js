@@ -34,7 +34,7 @@ const childrenString = children => {
 };
 
 const itemToString = ({name, args, children}) => {
-	return encodeURIComponent(name) + argsString(args) + childrenString(children);
+	return name + argsString(args) + childrenString(children);
 };
 
 /**
