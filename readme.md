@@ -49,7 +49,7 @@ const nyc = require('name-your-contributors');
 
 nyc.nameYourContributors({
 	token: process.env.GITHUB_TOKEN,
-	user: 'RichardLitt,
+	user: 'RichardLitt',
 	repo: 'name-your-contributors'
 	}).then(//do something with the results
 	);
@@ -59,7 +59,7 @@ nyc.nameContributorsToOrg({
 	orgName: 'ipfs',
 	before: '2017-01-01,
 	after: '2016-01-01
-	}).then(...)
+	}).then(...);
 ```
 
 ### From the Command Line

@@ -29,7 +29,8 @@ const cli = meow([`
 		b: 'before',
 		a: 'after',
 		r: 'repo',
-		u: 'user'
+		u: 'user',
+		t: 'token'
 	}
 }]);
 
