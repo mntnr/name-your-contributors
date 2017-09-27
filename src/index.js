@@ -22,6 +22,10 @@ const reposForOrg = ({token, orgName}) =>
 			graphql.executequery(token, queries.organization(orgName))
 			.then(queries.cleanOrgNames);
 
+const getUserRepos = ({token, login}) =>
+			graphql.executequery(token, queries.userRepos(login))
+			.then(queries.cleanUserRepos);
+
 /** Returns contributions to all repos owned by orgName.
 	*	@param token   - GitHub auth token
 	* @param orgName - Name of organization
@@ -35,5 +39,6 @@ const nameContributorsToOrg = ({token, orgName, before, after}) =>
 module.exports = {
 	nameYourContributors,
 	reposForOrg,
-	nameContributorsToOrg
+	nameContributorsToOrg,
+	getUserRepos
 };

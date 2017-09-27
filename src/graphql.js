@@ -23,17 +23,27 @@ const argsString = args => {
 	}
 };
 
+let itemToString = () => {
+	throw new Error('not Implemented');
+};
+
 const childrenString = children => {
 	if (children.length === 0) {
 		return '';
 	} else {
+		if (!children.map) {
+			// This problem comes up if you add nodes as children to other nodes
+			// manually and forget to make it a list. Printing out the error makes it
+			// easy to see where you made a mistake. At least it has so far.
+			console.error('Children must be an array. Instead we got:', children);
+		}
 		const s = children.map(itemToString)
 					.reduce((acc, next) => acc + next + '\n', '');
-		return '{' + s + '}';
+		return '{' + s.substring(0, s.length - 1) + '}';
 	}
 };
 
-const itemToString = ({name, args, children}) => {
+itemToString = ({name, args, children}) => {
 	return name + argsString(args) + childrenString(children);
 };
 
@@ -64,8 +74,8 @@ const queryNode = (name, args = {}, children = []) => {
 	* cost.
 	*/
 const queryCost = item => '{"query": ' +
-			JSON.stringify('query{rateLimit(dryRun: true){cost}\n'
-										 + item.toString() + '}') + '}';
+			JSON.stringify('query{rateLimit(dryRun: true){cost}\n' +
+										item.toString() + '}') + '}';
 
 /** Converts a queryNode object into a valid graphql query string according to
 Github's conventions. */
@@ -123,5 +133,7 @@ const executequery = (token, query) => {
 
 module.exports = {
 	executequery,
-	queryNode
+	formatQuery,
+	queryNode,
+	queryCost
 };

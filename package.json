@@ -21,12 +21,13 @@
 			"yoda": 0,
 			"no-mixed-operators": 0,
 			"quote-props": 0,
-			"no-use-before-define": 1,
 			"object-shorthand": 0,
 			"ava/prefer-async-await": 0,
 			"unicorn/catch-error-name": 0,
 			"prefer-promise-reject-errors": 0,
-			"spaced-comment": 0
+			"spaced-comment": 0,
+			"capitalized-comments": 0,
+			"max-params": 0
 		}
 	},
 	"keywords": [

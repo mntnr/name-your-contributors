@@ -6,6 +6,11 @@ const node = require('./graphql').queryNode;
 // Queries
 /////
 
+const pagination = [
+	node('totalCount'),
+	node('pageInfo').addChild(node('endCursor'))
+];
+
 const authoredQ = node('nodes')
 			.addChild(node('author')
 								.addChild(node('login'))
@@ -14,37 +19,42 @@ const authoredQ = node('nodes')
 			.addChild(node('createdAt'));
 
 const participantsQ = authoredQ
-			.addChild(node('comments', {first: 100})
-								.addChild(node('totalCount'))
-								.addChild(node('pageInfo')
-													.addChild(node('endCursor')))
+			.addChild(node('comments', {first: 100}, pagination)
 								.addChild(authoredQ));
 
-const multiQs = [
-	node('totalCount'),
-	node('pageInfo').addChild(node('endCursor')),
-	participantsQ
+const commentsQ = pagination.concat([participantsQ]);
+
+const prsIssuesQ = [
+	node('pullRequests', {first: 100}, commentsQ),
+	node('issues', {first: 100}, commentsQ)
 ];
 
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName) =>
-			node('repository', {name: repoName, owner: ownerName})
-			.addChild(node('pullRequests', {first: 100}, multiQs))
-			.addChild(node('issues', {first: 100}, multiQs));
+			node('repository', {name: repoName, owner: ownerName}, prsIssuesQ);
 
-/** Returns a query which retrieves all repos from an organisation. */
+/** Returns a query which retrieves names of all repos from an organisation. */
 const organization = name =>
 			node('organization', {login: name})
-			.addChild(node('repositories', {first: 100})
+			.addChild(node('repositories', {first: 100}, pagination)
 								.addChild(node('nodes')
 													.addChild(node('name'))));
 
 const orgRepos = name =>
 			node('organization', {login: name})
-			.addChild(node('repositories', {first: 50})
-								.addChild(node('nodes')
-													.addChild(node('pullRequests', {first: 50}, multiQs))
-													.addChild(node('issues', {first: 50}, multiQs))));
+			.addChild(node('repositories', {first: 25}, pagination)
+								.addChild(node('nodes', {}, prsIssuesQ)));
+
+const userRepos = login =>
+			node('user', {login})
+			.addChild(node('id'))
+			.addChild(node('repositories', {first: 100}, pagination));
+
+const continuationQuery = (id, parentType, childType, cursor, n, query) =>
+			node('node', {id})
+			.addChild(node(`... on ${parentType}`)
+								.addChild(node(childType, {after: cursor, first: n})
+													.addChild(node('nodes', {}, query))));
 
 /////
 // Data Filtering (co-queries if you will)
@@ -133,6 +143,12 @@ const cleanOrgRepos = (data, before, after) => {
 	return mergeRepoResults(repos.map(repo => cleanRepo(repo, before, after)));
 };
 
+const cleanUserRepos = x => x;
+//	const repos = x.repositories.totalCount;
+//	if (c <= 100) {
+//		return x
+//	} else {
+
 module.exports = {
 	repository,
 	organization,
@@ -145,5 +161,10 @@ module.exports = {
 	users,
 	cleanRepo,
 	mergeRepoResults,
-	authoredQ
+	authoredQ,
+	userRepos,
+	cleanUserRepos,
+	continuationQuery,
+	commentsQ,
+	prsIssuesQ
 };
