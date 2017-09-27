@@ -60,6 +60,13 @@ const queryNode = (name, args = {}, children = []) => {
 	return item;
 };
 
+/** Returns a query string which just asks how much quota the given query would
+	* cost.
+	*/
+const queryCost = item => '{"query": ' +
+			JSON.stringify('query{rateLimit(dryRun: true){cost}\n'
+										 + item.toString() + '}') + '}';
+
 /** Converts a queryNode object into a valid graphql query string according to
 Github's conventions. */
 const formatQuery = item => '{"query": ' +
