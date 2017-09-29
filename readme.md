@@ -65,7 +65,7 @@ nyc.nameContributorsToOrg({
 ### From the Command Line
 
 ```sh
-$ npm -i -g name-your-contributors
+$ npm install -g name-your-contributors
 
 $ export GITHUB_TOKEN={your-token}
 $ name-your-contributors -u RichardLitt -r name-your-contributors

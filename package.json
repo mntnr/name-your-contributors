@@ -1,68 +1,53 @@
 {
-	"name": "name-your-contributors",
-	"version": "0.0.0-development",
-	"description": "Name your GitHub contributors; get commits, issues, and comments",
-	"license": "MIT",
-	"repository": "RichardLitt/name-your-contributors",
-	"author": {
-		"name": "Richard Littauer",
-		"email": "richard.littauer@gmail.com",
-		"url": "burntfen.com"
-	},
-	"bin": "src/cli.js",
-	"scripts": {
-		"lint": "xo",
-		"test": "ava --no-color test/*.js",
-		"semantic-release": "semantic-release pre && npm publish && semantic-release post"
-	},
-	"xo": {
-		"rules": {
-			"no-else-return": 0,
-			"yoda": 0,
-			"no-mixed-operators": 0,
-			"quote-props": 0,
-			"object-shorthand": 0,
-			"ava/prefer-async-await": 0,
-			"unicorn/catch-error-name": 0,
-			"prefer-promise-reject-errors": 0,
-			"spaced-comment": 0,
-			"capitalized-comments": 0,
-			"max-params": 0
-		}
-	},
-	"keywords": [
-		"cli-app",
-		"cli",
-		"name",
-		"contribs",
-		"contrib",
-		"contributor",
-		"contributors",
-		"github",
-		"OSS",
-		"open source",
-		"commenters",
-		"creators",
-		"reviewers",
-		"review",
-		"code review",
-		"community",
-		"contribute",
-		"contributing"
-	],
-	"dependencies": {
-		"meow": "^3.7.0"
-	},
-	"devDependencies": {
-		"ava": "^0.22.0",
-		"semantic-release": "^8.0.0",
-		"xo": "^0.18.2"
-	},
-	"engines": {
-		"nodejs": ">=6.11.3"
-	},
-	"coordinates": [
-		45.5231596,
-		-73.5870259
-	]
+  "name": "name-your-contributors",
+  "version": "0.0.0-development",
+  "description": "Name your GitHub contributors; get commits, issues, and comments",
+  "license": "MIT",
+  "repository": "RichardLitt/name-your-contributors",
+  "author": {
+    "name": "Richard Littauer",
+    "email": "richard.littauer@gmail.com",
+    "url": "burntfen.com"
+  },
+  "bin": "src/cli.js",
+  "scripts": {
+    "lint": "standard",
+    "test": "standard && ava --no-color test/*.js",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+  },
+  "keywords": [
+    "cli-app",
+    "cli",
+    "name",
+    "contribs",
+    "contrib",
+    "contributor",
+    "contributors",
+    "github",
+    "OSS",
+    "open source",
+    "commenters",
+    "creators",
+    "reviewers",
+    "review",
+    "code review",
+    "community",
+    "contribute",
+    "contributing"
+  ],
+  "dependencies": {
+    "meow": "^3.7.0"
+  },
+  "devDependencies": {
+    "ava": "^0.22.0",
+    "semantic-release": "^8.0.0",
+    "standard": "^10.0.3"
+  },
+  "engines": {
+    "nodejs": ">=6.11.3"
+  },
+  "coordinates": [
+    45.5231596,
+    -73.5870259
+  ]
 }
