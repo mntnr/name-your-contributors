@@ -83,3 +83,11 @@ test('Queries without tokens get rejected', t => {
     repo: 'name-your-contributors'
   }).catch(error => t.is(error.message, 'Unauthorized'))
 })
+
+test('user repo names come back', async t => {
+  const repos = await main.userRepoNames({token, login: 'tgetgood'})
+
+  console.log(repos)
+
+  t.pass()
+})

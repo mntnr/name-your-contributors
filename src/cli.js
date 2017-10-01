@@ -36,32 +36,6 @@ const cli = meow([`
 
 const token = cli.flags.t || process.env.GITHUB_TOKEN
 
-// const graphql = require('./graphql');
-// const queries = require('./queries');
-
-// console.log(graphql.formatQuery(queries.continuationQuery(
-//  'MDQ6VXNlcjkxMDc1Mw==',
-//  'User',
-//  'repositories',
-//  'Y3Vyc29yOnYyOpHOAWVQWw==',
-//  queries.prsIssuesQ)));
-
-// graphql.executequery(token, queries.continuationQuery(
-//  'MDQ6VXNlcjkxMDc1Mw==',
-//  'User',
-//  'repositories',
-//  'Y3Vyc29yOnYyOpHOAWVQWw==',
-//  20,
-//  queries.prsIssuesQ))
-// .then(x => JSON.stringify(x, null, 2))
-// .then(console.log)
-
-// main.getUserRepos({
-//   token,
-//   login: 'RichardLitt'})
-//   .then(x => console.log(x))
-
-
 const after = cli.flags.a && new Date(cli.flags.a)
 const before = cli.flags.b && new Date(cli.flags.b)
 

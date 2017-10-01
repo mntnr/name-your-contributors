@@ -85,7 +85,7 @@ const fetchAll = async ({token, acc, data, type, key, count, query}) => {
       token, continuationQuery(
         data.id, type, key, data[key].pageInfo.endCursor, count, query))
 
-    return await fetchAll({
+    return fetchAll({
       token,
       acc: acc.concat(next.node[key].nodes),
       data: next.node,
@@ -94,7 +94,6 @@ const fetchAll = async ({token, acc, data, type, key, count, query}) => {
       count,
       query
     })
-
   } else {
     return acc
   }
@@ -153,7 +152,7 @@ const cleanRepo = async (token, result, before, after) => {
     key: 'pullRequests',
     count: 100,
     query: participantsQ
-    })
+  })
 
   const issues = await fetchAll({
     token,
@@ -166,14 +165,14 @@ const cleanRepo = async (token, result, before, after) => {
   })
 
   const prCs = flatten(await Promise.all(prs.map(pr => fetchAll({
-      token,
-      acc: pr.comments.nodes,
-      data: pr,
-      type: 'PullRequest',
-      key: 'comments',
-      count: 100,
-      query: authoredQ
-    }))))
+    token,
+    acc: pr.comments.nodes,
+    data: pr,
+    type: 'PullRequest',
+    key: 'comments',
+    count: 100,
+    query: authoredQ
+  }))))
 
   const issueCs = flatten(await Promise.all(issues.map(issue => fetchAll({
     token,
@@ -248,5 +247,5 @@ module.exports = {
   authoredQ,
   userRepos,
   cleanUserRepos,
-  continuationQuery,
+  continuationQuery
 }
