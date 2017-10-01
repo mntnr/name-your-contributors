@@ -12,7 +12,7 @@
   "bin": "src/cli.js",
   "scripts": {
     "lint": "standard",
-    "test": "standard && ava --no-color test/*.js",
+    "test": "ava --no-color test/*.js",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "keywords": [

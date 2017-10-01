@@ -12,20 +12,12 @@ const queries = require('./queries')
   */
 const repoContributors = ({token, user, repo, before, after}) =>
       graphql.executequery(token, queries.repository(repo, user))
-      .then(json => queries.checkAllRepo({token, data: json.repository}))
-      .then(json => queries.cleanRepo(json.repository, before, after))
+      .then(json => queries.cleanRepo(token, json.repository, before, after))
 
-/** Returns a list of the names of all repos belonging to orgName.
-  * @param token   - GitHub auth token
-  * @param orgName - Name of organization
-  */
-const reposForOrg = ({token, orgName}) =>
-      graphql.executequery(token, queries.organization(orgName))
-      .then(queries.cleanOrgNames)
-
-const getUserRepos = ({token, login}) =>
+/** Returns a list of names of all repos belonging to user. */
+const userRepoNames = ({token, login}) =>
       graphql.executequery(token, queries.userRepos(login))
-      .then(queries.cleanUserRepos)
+      .then(x => queries.cleanUserRepos(token, x))
 
 /** Returns contributions to all repos owned by orgName.
   * @param token   - GitHub auth token
@@ -35,11 +27,10 @@ const getUserRepos = ({token, login}) =>
   */
 const orgContributors = ({token, orgName, before, after}) =>
       graphql.executequery(token, queries.orgRepos(orgName))
-      .then(data => queries.cleanOrgRepos(data, before, after))
+      .then(data => queries.cleanOrgRepos(token, data, before, after))
 
 module.exports = {
   repoContributors,
-  reposForOrg,
   orgContributors,
-  getUserRepos
+  userRepoNames
 }

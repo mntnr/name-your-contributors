@@ -45,21 +45,22 @@ The environmental variable is also used by several of `name-your-contributor`'s 
 ### From Code
 
 ```js
-const nyc = require('name-your-contributors');
+const nyc = require('name-your-contributors')
 
-nyc.nameYourContributors({
+nyc.repoContributors({
 	token: process.env.GITHUB_TOKEN,
 	user: 'RichardLitt',
 	repo: 'name-your-contributors'
 	}).then(//do something with the results
-	);
+	)
+})
 
-nyc.nameContributorsToOrg({
+nyc.orgContributors({
 	token: process.env.GITHUB_TOKEN,
 	orgName: 'ipfs',
 	before: '2017-01-01,
 	after: '2016-01-01
-	}).then(...);
+	}).then(...)
 ```
 
 ### From the Command Line
@@ -75,7 +76,7 @@ $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib.json
 
 ## API
 
-### nameContributorsToOrg({orgName, token, before, after})
+### orgContributors({orgName, token, before, after})
 
 #### token
 
@@ -105,7 +106,7 @@ Type: `string`
 
 Get contributors from before this ISO timestamp.
 
-### nameYourContributors({user, repo, token, before, after})
+### repoContributors({user, repo, token, before, after})
 
 #### opts.user
 

@@ -1,16 +1,15 @@
 'use strict'
 
-const node = require('./graphql').queryNode
-// const send = require('./graphql').executequery
+const graphql = require('./graphql')
+const node = graphql.queryNode
 
 /// //
 // Queries
 /// //
 
-const pagination = [
-  node('totalCount'),
-  node('pageInfo').addChild(node('endCursor'))
-]
+const pagination = node('pageInfo')
+      .addChild(node('endCursor'))
+      .addChild(node('hasNextPage'))
 
 const authoredQ = node('nodes')
       .addChild(node('id'))
@@ -21,19 +20,24 @@ const authoredQ = node('nodes')
       .addChild(node('createdAt'))
 
 const participantsQ = authoredQ
-      .addChild(node('comments', {first: 100}, pagination)
+      .addChild(node('comments', {first: 100})
+                .addChild(pagination)
                 .addChild(authoredQ))
 
-const commentsQ = pagination.concat([participantsQ])
+const prsQ = node('pullRequests', {first: 100})
+      .addChild(pagination)
+      .addChild(participantsQ)
 
-const prsIssuesQ = [
-  node('pullRequests', {first: 100}, commentsQ),
-  node('issues', {first: 100}, commentsQ)
-]
+const issuesQ = node('issues', {first: 100})
+      .addChild(pagination)
+      .addChild(participantsQ)
 
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName) =>
-      node('repository', {name: repoName, owner: ownerName}, prsIssuesQ)
+      node('repository', {name: repoName, owner: ownerName})
+      .addChild(node('id'))
+      .addChild(prsQ)
+      .addChild(issuesQ)
 
 /** Returns a query which retrieves names of all repos from an organisation. */
 const organization = name =>
@@ -46,44 +50,54 @@ const organization = name =>
 const orgRepos = name =>
       node('organization', {login: name})
       .addChild(node('id'))
-      .addChild(node('repositories', {first: 25}, pagination)
-                .addChild(node('nodes', {}, prsIssuesQ)))
+      .addChild(node('repositories', {first: 25})
+                .addChild(pagination)
+                .addChild(node('nodes')
+                          .addChild(node('id'))
+                          .addChild(prsQ)
+                          .addChild(issuesQ)))
 
 const userRepos = login =>
       node('user', {login})
       .addChild(node('id'))
-      .addChild(node('repositories', {first: 100}, pagination))
+      .addChild(node('repositories', {first: 100})
+                .addChild(pagination)
+                .addChild(node('nodes').addChild(node('name'))))
 
 const continuationQuery = (id, parentType, childType, cursor, n, query) =>
       node('node', {id})
+      .addChild(node('id'))
       .addChild(node(`... on ${parentType}`)
                 .addChild(node(childType, {after: cursor, first: n})
-                          .addChild(node('nodes', {}, query))))
+                          .addChild(pagination)
+                          .addChild(query)))
 
 /// //
 // Data Filtering (co-queries if you will)
 /// //
 
-const cursorData = (x, key, fetched) => {
-  return {
-    id: x.id,
-    cursor: x[key].pageInfo.endCursor,
-    rem: Math.max(0, x[key].totalCount - fetched)
+/** Recursive fetcher keeps grabbing the next page from the API until there are
+  * none left. Returns the aggregate result of all fetches.
+  */
+const fetchAll = async ({token, acc, data, type, key, count, query}) => {
+  if (data[key].pageInfo.hasNextPage) {
+    const next = await graphql.executequery(
+      token, continuationQuery(
+        data.id, type, key, data[key].pageInfo.endCursor, count, query))
+
+    return await fetchAll({
+      token,
+      acc: acc.concat(next.node[key].nodes),
+      data: next.node,
+      type,
+      key,
+      count,
+      query
+    })
+
+  } else {
+    return acc
   }
-}
-
-const checkAllRepo = async ({token, data}) => {
-  const prcs = data.pullRequests.nodes
-        .map(x => cursorData(x, 'comments', 100))
-        .filter(x => x.rem > 0)
-
-  const issuescs = data.issues.nodes
-        .map(x => cursorData(x, 'comments', 100))
-        .filter(x => x.rem > 0)
-
-  console.log(prcs, issuescs)
-
-  return data
 }
 
 /** Returns a function that when given an array of objects with createAt keys,
@@ -99,7 +113,7 @@ const timeFilter = (before = new Date(), after = new Date(0)) =>
 const users = arr =>
   arr.map(x => x.author)
       // Get rid of null authors (deleted accounts)
-      .filter(x => !(x === null || undefined === x))
+      .filter(x => !(x == null))
       .map(x => [x.login, x.name])
 
 /** Returns an array which is the concatenation of arrays in the passed in
@@ -107,26 +121,75 @@ const users = arr =>
   */
 const flatten = arr => arr.reduce((acc, next) => acc.concat(next), [])
 
-const comments = x => flatten(x.map(x => x.comments.nodes))
-
 /** Given an array of arrays of length 2, returns an array of pairs where each
   * first element occurs at most once.
   */
 const uniquify = xs => Array.from(new Map(xs).entries())
 
+const cleanUserRepos = async (token, x) => {
+  const repos = await fetchAll({
+    token,
+    acc: x.user.repositories.nodes,
+    data: x.user,
+    type: 'User',
+    key: 'repositories',
+    count: 100,
+    query: node('nodes').addChild(node('name'))
+  })
+
+  return repos.map(x => x.name)
+}
+
 /** Parse repository query result and filter for date range. */
-const cleanRepo = (result, before, after) => {
+const cleanRepo = async (token, result, before, after) => {
   const tf = timeFilter(before, after)
   const process = x => uniquify(users(tf(x)))
 
-  const prs = result.pullRequests.nodes
-  const issues = result.issues.nodes
+  const prs = await fetchAll({
+    token,
+    acc: result.pullRequests.nodes,
+    data: result,
+    type: 'Repository',
+    key: 'pullRequests',
+    count: 100,
+    query: participantsQ
+    })
+
+  const issues = await fetchAll({
+    token,
+    acc: result.issues.nodes,
+    data: result,
+    type: 'Repository',
+    key: 'issues',
+    count: 100,
+    query: participantsQ
+  })
+
+  const prCs = flatten(await Promise.all(prs.map(pr => fetchAll({
+      token,
+      acc: pr.comments.nodes,
+      data: pr,
+      type: 'PullRequest',
+      key: 'comments',
+      count: 100,
+      query: authoredQ
+    }))))
+
+  const issueCs = flatten(await Promise.all(issues.map(issue => fetchAll({
+    token,
+    acc: issue.comments.nodes,
+    data: issue,
+    type: 'Issue',
+    key: 'comments',
+    count: 100,
+    query: authoredQ
+  }))))
 
   return {
     prCreators: process(prs),
-    prCommentators: process(comments(prs)),
+    prCommentators: process(prCs),
     issueCreators: process(issues),
-    issueCommentators: process(comments(issues))
+    issueCommentators: process(issueCs)
   }
 }
 
@@ -156,30 +219,26 @@ const mergeRepoResults = repos =>
         issueCommentators: []
       })
 
-/** Returns a flat list of repo names given the result of the organizations
-  * query.
-  */
-const cleanOrgNames = data =>
-      flatten(data.organization.repositories.nodes)
-      .map(x => x.name)
+const cleanOrgRepos = async (token, result, before, after) => {
+  const repos = await fetchAll({
+    token,
+    acc: result.organization.repositories.nodes,
+    data: result.organization,
+    type: 'Organization',
+    key: 'repositories',
+    count: 25,
+    query: node('nodes').addChild(node('id')).addChild(prsQ).addChild(issuesQ)
+  })
 
-const cleanOrgRepos = (data, before, after) => {
-  const repos = data.organization.repositories.nodes
-  return mergeRepoResults(repos.map(repo => cleanRepo(repo, before, after)))
+  return mergeRepoResults(
+    await Promise.all(repos.map(repo => cleanRepo(token, repo, before, after))))
 }
-
-const cleanUserRepos = x => x
-//  const repos = x.repositories.totalCount;
-//  if (c <= 100) {
-//    return x
-//  } else {
 
 module.exports = {
   repository,
   organization,
   orgRepos,
   cleanOrgRepos,
-  cleanOrgNames,
   timeFilter,
   uniquify,
   flatten,
@@ -190,7 +249,4 @@ module.exports = {
   userRepos,
   cleanUserRepos,
   continuationQuery,
-  commentsQ,
-  prsIssuesQ,
-  checkAllRepo
 }

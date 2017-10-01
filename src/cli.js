@@ -59,31 +59,30 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 // main.getUserRepos({
 //   token,
 //   login: 'RichardLitt'})
-// .then(x => {
-//   return {
-//     id: x.user.id,
-//     cursor: x.user.repositories.pageInfo.endCursor,
-//     rem: x.user.repositories.totalCount - 100
-//     }})
-//   .then(console.log)
+//   .then(x => console.log(x))
+
+
+const after = cli.flags.a && new Date(cli.flags.a)
+const before = cli.flags.b && new Date(cli.flags.b)
 
 if (cli.flags.o && token) {
   main.orgContributors({
     token: token,
     orgName: cli.flags.o,
-    before: cli.flags.b,
-    after: cli.flags.after
+    before: before,
+    after: after
   }).then(json => JSON.stringify(json, null, 2))
     .then(console.log)
+    .catch(e => console.error(e.message))
 } else if (cli.flags.u && cli.flags.r && token) {
   main.repoContributors({
     token: token,
     user: cli.flags.u,
     repo: cli.flags.r,
-    before: cli.flags.b,
-    after: cli.flags.a
+    before: before,
+    after: after
   }).then(x => JSON.stringify(x, null, 2))
-    // .then(console.log)
+    .then(console.log)
     .catch(e => console.error(e.message))
 } else {
   console.error('You must currently specify both a user and a repo name. And provide a token.')

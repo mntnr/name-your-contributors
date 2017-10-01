@@ -40,7 +40,7 @@ const emptyResponse = {
 }
 
 test('No contributions in a single second', t => {
-  return main.nameYourContributors({
+  return main.repoContributors({
     token: token,
     user: 'RichardLitt',
     repo: 'name-your-contributors',
@@ -64,7 +64,7 @@ const compareKeys = (x, k) =>
 // ever deleted, then those contributions will cease to come back, so we have to
 // be flexible.
 test('Contributors before a fixed date remain static', t => {
-  return main.nameYourContributors({
+  return main.repoContributors({
     token: token,
     user: 'RichardLitt',
     repo: 'name-your-contributors',
@@ -78,7 +78,7 @@ test('Contributors before a fixed date remain static', t => {
 })
 
 test('Queries without tokens get rejected', t => {
-  return main.nameYourContributors({
+  return main.repoContributors({
     user: 'RichardLitt',
     repo: 'name-your-contributors'
   }).catch(error => t.is(error.message, 'Unauthorized'))
