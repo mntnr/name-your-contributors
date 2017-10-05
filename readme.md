@@ -30,15 +30,21 @@ $ export GITHUB_TOKEN=ab34e...
 You can also set the var automatically in every session by adding the above line
 to your `.bashrc` file in your home directory.
 
-#### Other repositories using this token
+#### Caveats
 
-The environmental variable is also used by several of `name-your-contributor`'s similar repositories:
+GitHub regulates API traffic by a credit system. The limits are quite high; it's
+permitted to query hundreds of repos per hour using the `repoContributors`
+function, but some organisations have many hundreds of repos, and a single call
+to `orgContributors` could potentially exhaust your entire hourly quota. The
+WikiMedia Foundation is a good example of an org with way too many repos for
+this app to handle.
 
- * [get-code-reviewers](https://github.com/RichardLitt/get-code-reviewers) - Get users who comment on PRs or code for OS GitHub repos.
- * [get-issue-commenters](https://github.com/richardlitt/get-issue-commenters) - Get users who comment on issues for OS GitHub repos.
- * [get-github-issue-creators](https://github.com/RichardLitt/get-github-issue-creators) - Get a list of GitHub issue creators from an organization or repo.
- * [get-github-pr-creators](https://github.com/RichardLitt/get-pr-creators) - Get a list of GitHub PR creators from an organization or repo.
- * [get-github-user](https://github.com/RichardLitt/get-github-user) - Get GitHub user information from just a username.
+Unfortunately filtering by contributions before or after a given date has no
+effect on quota use, since the data still needs to be queried before it can be
+filtered.
+
+For more details on rate limits, see
+https://developer.github.com/v4/guides/resource-limitations/.
 
 ## Usage
 
