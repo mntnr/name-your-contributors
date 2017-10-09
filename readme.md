@@ -64,8 +64,8 @@ nyc.repoContributors({
 nyc.orgContributors({
 	token: process.env.GITHUB_TOKEN,
 	orgName: 'ipfs',
-	before: '2017-01-01,
-	after: '2016-01-01
+	before: '2017-01-01',
+	after: '2016-01-01'
 	}).then(...)
 ```
 
