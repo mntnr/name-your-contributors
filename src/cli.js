@@ -45,7 +45,6 @@ const before = b && new Date(b)
 
 const token = cli.flags.t || cli.flags.token || process.env.GITHUB_TOKEN
 
-
 if (org && token) {
   main.orgContributors({
     orgName: org,
