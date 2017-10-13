@@ -2,7 +2,25 @@
 'use strict'
 
 const meow = require('meow')
+const csv = require('csv-writer').createArrayCsvStringifier
 const main = require('./index')
+
+const flatten = json => {
+  const prs = json.prCreators.map(x => ['pr creator'].concat(x))
+  const prcs = json.prCommentators.map(x => ['pr commentator'].concat(x))
+  const is = json.issueCreators.map(x => ['issue creator'].concat(x))
+  const iscs = json.issueCommentators.map(x => ['issue commentator'].concat(x))
+
+  return prs.concat(prcs).concat(is).concat(iscs)
+}
+
+const toCSV = json => {
+  const writer = csv({
+    header: ['TYPE', 'LOGIN', 'NAME']
+  })
+  return writer.getHeaderString() +
+    writer.stringifyRecords(flatten(json))
+}
 
 const cli = meow([`
   Usage
@@ -15,6 +33,7 @@ const cli = meow([`
     -u, --user   - User to which repository belongs
     -o, --org    - Search all repos within this organisation
     -t, --token  - GitHub auth token to use
+    --csv        - Output data in CSV format
 
   Authentication
     This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
@@ -61,8 +80,13 @@ if (org && token) {
     repo,
     before,
     after
-  }).then(x => JSON.stringify(x, null, 2))
-    .then(console.log)
+  }).then(x => {
+    if (cli.flags.csv) {
+      return toCSV(x)
+    } else {
+      return JSON.stringify(x, null, 2)
+    }
+  }).then(console.log)
     .catch(e => console.error(e.message))
 } else {
   console.error('You must currently specify both a user and a repo name. And provide a token.')
