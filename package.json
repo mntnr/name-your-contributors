@@ -36,6 +36,7 @@
     "contributing"
   ],
   "dependencies": {
+    "csv-writer": "0.0.3",
     "meow": "^3.7.0"
   },
   "devDependencies": {
