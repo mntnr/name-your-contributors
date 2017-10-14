@@ -34,27 +34,33 @@ const cli = meow([`
   }
 })
 
-const token = cli.flags.t || process.env.GITHUB_TOKEN
+const user = cli.flags.u || cli.flags.user
+const repo = cli.flags.r || cli.flags.repo
+const org = cli.flags.o || cli.flags.org
 
-const after = cli.flags.a && new Date(cli.flags.a)
-const before = cli.flags.b && new Date(cli.flags.b)
+const a = cli.flags.a || cli.flags.after
+const b = cli.flags.b || cli.flags.before
+const after = a && new Date(a)
+const before = b && new Date(b)
 
-if (cli.flags.o && token) {
+const token = cli.flags.t || cli.flags.token || process.env.GITHUB_TOKEN
+
+if (org && token) {
   main.orgContributors({
-    token: token,
-    orgName: cli.flags.o,
-    before: before,
-    after: after
+    orgName: org,
+    token,
+    before,
+    after
   }).then(json => JSON.stringify(json, null, 2))
     .then(console.log)
     .catch(e => console.error(e.message))
-} else if (cli.flags.u && cli.flags.r && token) {
+} else if (user && repo && token) {
   main.repoContributors({
-    token: token,
-    user: cli.flags.u,
-    repo: cli.flags.r,
-    before: before,
-    after: after
+    token,
+    user,
+    repo,
+    before,
+    after
   }).then(x => JSON.stringify(x, null, 2))
     .then(console.log)
     .catch(e => console.error(e.message))
