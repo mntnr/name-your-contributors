@@ -29,11 +29,11 @@ const cli = meow([`
   Options
     -a, --after  - Get contributions after date
     -b, --before - Get contributions before data
-    -r, --repo   - Repository to search
-    -u, --user   - User to which repository belongs
+    -c, --csv    - Output data in CSV format
     -o, --org    - Search all repos within this organisation
+    -r, --repo   - Repository to search
     -t, --token  - GitHub auth token to use
-    --csv        - Output data in CSV format
+    -u, --user   - User to which repository belongs
 
   Authentication
     This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
@@ -45,11 +45,12 @@ const cli = meow([`
     $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib-2017.json
 `], {
   alias: {
-    b: 'before',
     a: 'after',
+    b: 'before',
+    c: 'csv',
     r: 'repo',
-    u: 'user',
-    t: 'token'
+    t: 'token',
+    u: 'user'
   }
 })
 
