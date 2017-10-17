@@ -43,15 +43,16 @@ test('time filtering <=', t => {
   t.is(tf(fdate, fdate)([{createdAt: fdate}]).length, 1)
 })
 
-test('uniqify', t => {
-  const unique = [['a', 'b'], ['b', 'c'], ['c', 'd']]
+test('merge', t => {
+  const testusers = [{login: 'x', count: 1}, {login: 'y', count: 1},
+                     {login: 'x', count: 3}, {login: 'z', count: 2}]
 
-  t.deepEqual(q.uniquify([[1, 2], [3, 4], [1, 2]]), [[1, 2], [3, 4]])
-  t.deepEqual(q.uniquify(unique), unique)
-  t.deepEqual(q.uniquify(unique.concat(unique)), unique)
+  t.deepEqual(q.mergeContributions(testusers), [{login: 'x', count: 4},
+                                                {login: 'y', count: 1},
+                                                {login: 'z', count: 2}])
 })
 
 test('null users get filtered', t => {
   const ulist = [{author: {login: 'me', name: 'just me'}}, {author: null}]
-  t.deepEqual(q.users(ulist), [['me', 'just me']])
+  t.deepEqual(q.users(ulist), [{login: 'me', name: 'just me', count: 1}])
 })

@@ -16,7 +16,8 @@ const authoredQ = node('nodes')
       .addChild(node('author')
                 .addChild(node('login'))
                 .addChild(node('... on User')
-                          .addChild(node('name'))))
+                          .addChild(node('name'))
+                          .addChild(node('url'))))
       .addChild(node('createdAt'))
 
 const participantsQ = authoredQ
@@ -110,10 +111,13 @@ const timeFilter = (before = new Date(), after = new Date(0)) =>
       })
 
 const users = arr =>
-  arr.map(x => x.author)
+      arr.map(x => x.author)
       // Get rid of null authors (deleted accounts)
       .filter(x => !(x == null))
-      .map(x => [x.login, x.name])
+      .map(x => {
+        x.count = 1
+        return x
+      })
 
 /** Returns an array which is the concatenation of arrays in the passed in
   * array.
@@ -123,7 +127,19 @@ const flatten = arr => arr.reduce((acc, next) => acc.concat(next), [])
 /** Given an array of arrays of length 2, returns an array of pairs where each
   * first element occurs at most once.
   */
-const uniquify = xs => Array.from(new Map(xs).entries())
+const mergeContributions = xs => {
+  const m = new Map()
+  for (let x of xs) {
+    // Use GitHub login as unique key.
+    let key = x.login
+    if (m.has(key)) {
+      m.get(key).count += x.count
+    } else {
+      m.set(key, x)
+    }
+  }
+  return Array.from(m.values())
+}
 
 const cleanUserRepos = async (token, x) => {
   const repos = await fetchAll({
@@ -142,7 +158,7 @@ const cleanUserRepos = async (token, x) => {
 /** Parse repository query result and filter for date range. */
 const cleanRepo = async (token, result, before, after) => {
   const tf = timeFilter(before, after)
-  const process = x => uniquify(users(tf(x)))
+  const process = x => mergeContributions(users(tf(x)))
 
   const prs = await fetchAll({
     token,
@@ -193,7 +209,7 @@ const cleanRepo = async (token, result, before, after) => {
 }
 
 const mergeArrays = (a, b) =>
-      uniquify(a.concat(b))
+      mergeContributions(a.concat(b))
 
 /** Recursively merges all contributor maps in the list into a single map */
 const mergeRepoResults = repos =>
@@ -239,10 +255,10 @@ module.exports = {
   orgRepos,
   cleanOrgRepos,
   timeFilter,
-  uniquify,
   flatten,
   users,
   cleanRepo,
+  mergeContributions,
   mergeRepoResults,
   authoredQ,
   userRepos,
