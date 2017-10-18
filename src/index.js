@@ -10,13 +10,13 @@ const queries = require('./queries')
   * @param before - only return contributions before this timestamp
   * @param after  - only return contributions after this timestamp
   */
-const repoContributors = ({token, user, repo, before, after}) =>
-      graphql.executequery(token, queries.repository(repo, user))
+const repoContributors = ({token, user, repo, before, after, debug}) =>
+      graphql.executequery(token, queries.repository(repo, user), debug)
       .then(json => queries.cleanRepo(token, json.repository, before, after))
 
 /** Returns a list of names of all repos belonging to user. */
-const userRepoNames = ({token, login}) =>
-      graphql.executequery(token, queries.userRepos(login))
+const userRepoNames = ({token, login, debug}) =>
+      graphql.executequery(token, queries.userRepos(login), debug)
       .then(x => queries.cleanUserRepos(token, x))
 
 /** Returns contributions to all repos owned by orgName.
@@ -25,8 +25,8 @@ const userRepoNames = ({token, login}) =>
   * @param before  - only return contributions before this timestamp
   * @param after   - only return contributions after this timestamp
   */
-const orgContributors = ({token, orgName, before, after}) =>
-      graphql.executequery(token, queries.orgRepos(orgName))
+const orgContributors = ({token, orgName, before, after, debug}) =>
+      graphql.executequery(token, queries.orgRepos(orgName), debug)
       .then(data => queries.cleanOrgRepos(token, data, before, after))
 
 module.exports = {

@@ -59,8 +59,11 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 const after = cli.flags.a && new Date(cli.flags.a)
 const before = cli.flags.b && new Date(cli.flags.b)
 
+const debugMode = cli.flags.debug
+
 if (cli.flags.o && token) {
   main.orgContributors({
+    debug: debugMode,
     token: token,
     orgName: cli.flags.o,
     before: before,
@@ -70,6 +73,7 @@ if (cli.flags.o && token) {
     .catch(e => console.error(e.message))
 } else if (cli.flags.u && cli.flags.r && token) {
   main.repoContributors({
+    debug: debugMode,
     token: token,
     user: cli.flags.u,
     repo: cli.flags.r,
@@ -82,7 +86,9 @@ if (cli.flags.o && token) {
       return JSON.stringify(x, null, 2)
     }
   }).then(console.log)
-    .catch(e => console.error(e.message))
+    .catch(e => {
+      console.error(e.stack)
+    })
 } else {
   console.error('You must currently specify both a user and a repo name. And provide a token.')
   process.exit(1)
