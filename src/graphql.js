@@ -87,7 +87,7 @@ const formatQuery = item => '{"query": ' +
   * @param {string} token - Github auth token
   * @param {queryNode} query - The query to execute
   */
-const executequery = (token, query) => {
+const executequery = (token, query, debugMode) => {
   return new Promise((resolve, reject) => {
     let queryResponse = ''
     const headers = {
@@ -112,6 +112,9 @@ const executequery = (token, query) => {
           if (res.statusCode === 200) {
             const json = JSON.parse(queryResponse)
             if (json.data) {
+              if (debugMode) {
+                console.log(JSON.stringify(json.data, null, 2))
+              }
               resolve(json.data)
             } else {
               reject(new Error('Graphql error: ' + JSON.stringify(json, null, 2)))
