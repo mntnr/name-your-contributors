@@ -33,10 +33,15 @@ const issuesQ = node('issues', {first: 100})
       .addChild(pagination)
       .addChild(participantsQ)
 
+const commitCommentQ = node('commitComments', {first: 100})
+      .addChild(pagination)
+      .addChild(authoredQ)
+
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName) =>
       node('repository', {name: repoName, owner: ownerName})
       .addChild(node('id'))
+      .addChild(commitCommentQ)
       .addChild(prsQ)
       .addChild(issuesQ)
 
@@ -180,6 +185,16 @@ const cleanRepo = async (token, result, before, after) => {
     query: participantsQ
   })
 
+  const commitComments = await fetchAll({
+    token,
+    acc: result.commitComments.nodes,
+    data: result,
+    type: 'Repository',
+    key: 'commitComments',
+    count: 100,
+    query: commitCommentQ
+  })
+
   const prCs = flatten(await Promise.all(prs.map(pr => fetchAll({
     token,
     acc: pr.comments.nodes,
@@ -201,10 +216,12 @@ const cleanRepo = async (token, result, before, after) => {
   }))))
 
   return {
+    commitCommentators: process(commitComments),
     prCreators: process(prs),
     prCommentators: process(prCs),
     issueCreators: process(issues),
-    issueCommentators: process(issueCs)
+    issueCommentators: process(issueCs),
+    reactors: []
   }
 }
 
