@@ -33,6 +33,8 @@ const contribPre = {
 }
 
 const emptyResponse = {
+  commitCommentators: [],
+  reactors: [],
   prCreators: [],
   prCommentators: [],
   issueCreators: [],
