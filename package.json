@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "3.0.0",
+  "version": "0.0.0-development",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "RichardLitt/name-your-contributors",
@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "ava": "^0.22.0",
-    "semantic-release": "^8.0.0",
+    "semantic-release": "^8.2.0",
     "standard": "^10.0.3"
   },
   "engines": {
