@@ -14,10 +14,11 @@ const pagination = node('pageInfo')
 const reactorQ = node('reactions', {first: 10})
       .addChild(pagination)
       .addChild(node('nodes')
-               .addChild(node('user')
-                         .addChild(node('login'))
-                         .addChild(node('name'))
-                         .addChild(node('url'))))
+                .addChild(node('createdAt'))
+                .addChild(node('user')
+                          .addChild(node('login'))
+                          .addChild(node('name'))
+                          .addChild(node('url'))))
 
 const authoredQ = node('nodes')
       .addChild(reactorQ)
@@ -37,6 +38,9 @@ const participantsQ = authoredQ
 const prsQ = node('pullRequests', {first: 100})
       .addChild(pagination)
       .addChild(participantsQ)
+      .addChild(node('reviews', {first: 20)
+                .addChild(paginations)
+                .addChild(participantsQ))
 
 const issuesQ = node('issues', {first: 100})
       .addChild(pagination)
@@ -125,7 +129,7 @@ const timeFilter = (before = new Date(), after = new Date(0)) =>
       })
 
 const users = arr =>
-      arr.map(x => x.author)
+      arr.map(x => x.author || x.user)
       // Get rid of null authors (deleted accounts)
       .filter(x => !(x == null))
       .map(x => {
@@ -237,13 +241,33 @@ const cleanRepo = async (token, result, before, after) => {
     query: authoredQ
   })
 
+  const reactions = Array.from(await depaginateAll(commitComments, {
+    token,
+    acc: cc => cc.reactions.nodes,
+    type: 'CommitComment',
+    key: 'reactions',
+    query: reactorQ
+    })).concat(await depaginateAll(issueCs, {
+      token,
+      acc: ic => ic.reactions.nodes,
+      type: 'IssueComment',
+      key: 'reactions',
+      query: reactorQ
+    })).concat(await depaginateAll(prCs, {
+      token,
+      acc: prc => prc.reactions.nodes,
+      type: 'PullRequestComment',
+      key: 'reactions',
+      query: reactorQ
+    }))
+
   return {
     commitCommentators: process(commitComments),
     prCreators: process(prs),
     prCommentators: process(prCs),
     issueCreators: process(issues),
     issueCommentators: process(issueCs),
-    reactors: []
+    reactors: process(reactions)
   }
 }
 
