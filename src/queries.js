@@ -20,6 +20,15 @@ const reactorQ = node('reactions', {first: 10})
                           .addChild(node('name'))
                           .addChild(node('url'))))
 
+const reviewAuthoredQ = node('nodes')
+      .addChild(node('id'))
+      .addChild(node('author')
+                .addChild(node('login'))
+                .addChild(node('... on User')
+                          .addChild(node('name'))
+                          .addChild(node('url'))))
+      .addChild(node('createdAt'))
+
 const authoredQ = node('nodes')
       .addChild(reactorQ)
       .addChild(node('id'))
@@ -30,6 +39,15 @@ const authoredQ = node('nodes')
                           .addChild(node('url'))))
       .addChild(node('createdAt'))
 
+const reviewPartQ = reviewAuthoredQ
+      .addChild(node('comments', {first: 20})
+                .addChild(pagination)
+                .addChild(reviewAuthoredQ))
+
+const reviewQ = node('reviews', {first: 20})
+      .addChild(pagination)
+      .addChild(reviewPartQ)
+
 const participantsQ = authoredQ
       .addChild(node('comments', {first: 100})
                 .addChild(pagination)
@@ -37,10 +55,8 @@ const participantsQ = authoredQ
 
 const prsQ = node('pullRequests', {first: 100})
       .addChild(pagination)
-      .addChild(participantsQ)
-      .addChild(node('reviews', {first: 20)
-                .addChild(paginations)
-                .addChild(participantsQ))
+      .addChild(participantsQ
+                .addChild(reviewQ))
 
 const issuesQ = node('issues', {first: 100})
       .addChild(pagination)
@@ -225,7 +241,15 @@ const cleanRepo = async (token, result, before, after) => {
     query: commitCommentQ
   })
 
-  const prCs = await depaginateAll(prs, {
+  const reviews = await depaginateAll(prs, {
+    token,
+    acc: pr => pr.reviews.nodes,
+    type: 'PullRequest',
+    key: 'reviews',
+    query: reviewPartQ
+  })
+
+  const prComments = await depaginateAll(prs, {
     token,
     acc: pr => pr.comments.nodes,
     type: 'PullRequest',
@@ -233,7 +257,7 @@ const cleanRepo = async (token, result, before, after) => {
     query: authoredQ
   })
 
-  const issueCs = await depaginateAll(issues, {
+  const issueComments = await depaginateAll(issues, {
     token,
     acc: issue => issue.comments.nodes,
     type: 'Issue',
@@ -247,27 +271,28 @@ const cleanRepo = async (token, result, before, after) => {
     type: 'CommitComment',
     key: 'reactions',
     query: reactorQ
-    })).concat(await depaginateAll(issueCs, {
-      token,
-      acc: ic => ic.reactions.nodes,
-      type: 'IssueComment',
-      key: 'reactions',
-      query: reactorQ
-    })).concat(await depaginateAll(prCs, {
-      token,
-      acc: prc => prc.reactions.nodes,
-      type: 'PullRequestComment',
-      key: 'reactions',
-      query: reactorQ
-    }))
+  })).concat(await depaginateAll(issueComments, {
+    token,
+    acc: ic => ic.reactions.nodes,
+    type: 'IssueComment',
+    key: 'reactions',
+    query: reactorQ
+  })).concat(await depaginateAll(prComments, {
+    token,
+    acc: prc => prc.reactions.nodes,
+    type: 'PullRequestComment',
+    key: 'reactions',
+    query: reactorQ
+  }))
 
   return {
     commitCommentators: process(commitComments),
     prCreators: process(prs),
-    prCommentators: process(prCs),
+    prCommentators: process(prComments),
     issueCreators: process(issues),
-    issueCommentators: process(issueCs),
-    reactors: process(reactions)
+    issueCommentators: process(issueComments),
+    reactors: process(reactions),
+    reviewers: process(reviews)
   }
 }
 
