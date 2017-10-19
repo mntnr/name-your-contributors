@@ -17,7 +17,7 @@ const argsString = args => {
     return ''
   } else {
     const s = keys.map(k => {
-      return encodeURIComponent(k) + ': ' + escapeArgValue(args[k]) + ','
+      return k + ': ' + escapeArgValue(args[k]) + ','
     }).reduce((acc, next) => acc + next, '')
     return '(' + s.substr(0, s.length - 1) + ')'
   }

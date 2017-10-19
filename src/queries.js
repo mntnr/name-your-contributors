@@ -11,14 +11,17 @@ const pagination = node('pageInfo')
       .addChild(node('endCursor'))
       .addChild(node('hasNextPage'))
 
+const userInfo = node('user')
+      .addChild(node('login'))
+      .addChild(node('name'))
+      .addChild(node('url'))
+
 const reactorQ = node('reactions', {first: 10})
       .addChild(pagination)
       .addChild(node('nodes')
+                .addChild(node('id'))
                 .addChild(node('createdAt'))
-                .addChild(node('user')
-                          .addChild(node('login'))
-                          .addChild(node('name'))
-                          .addChild(node('url'))))
+                .addChild(userInfo))
 
 const authoredQ = node('nodes')
       .addChild(node('id'))
@@ -28,6 +31,30 @@ const authoredQ = node('nodes')
                           .addChild(node('name'))
                           .addChild(node('url'))))
       .addChild(node('createdAt'))
+
+const commitAuthorQ = node('author').addChild(userInfo)
+
+const commitHistoryQ = node('nodes')
+      .addChild(node('id'))
+      .addChild(commitAuthorQ)
+
+const commitQ = (before, after) => {
+  const b = before.toISOString()
+  const a = after.toISOString()
+  return node('nodes')
+    .addChild(node('id'))
+    .addChild(node('target')
+              .addChild(node('id'))
+              .addChild(node('... on Commit')
+                        .addChild(
+                          node('history', {first: 100, since: a, until: b})
+                            .addChild(pagination)
+                            .addChild(commitHistoryQ))))
+}
+
+const refsQ = (before, after) => node('refs', {first: 100, refPrefix: 'refs/heads/'})
+      .addChild(pagination)
+      .addChild(commitQ(before, after))
 
 const authoredWithReactionsQ = authoredQ
       .addChild(reactorQ)
@@ -55,10 +82,11 @@ const commitCommentQ = node('commitComments', {first: 100})
       .addChild(authoredQ)
 
 /** Returns a query to retrieve all contributors to a repo */
-const repository = (repoName, ownerName) =>
+const repository = (repoName, ownerName, before, after) =>
       node('repository', {name: repoName, owner: ownerName})
       .addChild(node('id'))
       .addChild(commitCommentQ)
+      .addChild(refsQ(before, after))
       .addChild(prsQ)
       .addChild(issuesQ)
 
@@ -68,15 +96,18 @@ const organization = name =>
       .addChild(node('id'))
       .addChild(node('repositories', {first: 100}, pagination)
                 .addChild(node('nodes')
+                          .addChild(node('id'))
                           .addChild(node('name'))))
 
-const orgRepos = name =>
+const orgRepos = (name, before, after) =>
       node('organization', {login: name})
       .addChild(node('id'))
       .addChild(node('repositories', {first: 25})
                 .addChild(pagination)
                 .addChild(node('nodes')
                           .addChild(node('id'))
+                          .addChild(commitCommentQ)
+                          .addChild(refsQ(before, after))
                           .addChild(prsQ)
                           .addChild(issuesQ)))
 
@@ -126,7 +157,7 @@ const fetchAll = async ({token, acc, data, type, key, count, query}) => {
   * returns an array containing only those objects created between before and
   * after.
   */
-const timeFilter = (before = new Date(), after = new Date(0)) =>
+const timeFilter = (before, after) =>
       data => data.filter(x => {
         const date = new Date(x.createdAt)
         return after <= date && date <= before
@@ -198,6 +229,28 @@ const depaginateAll = async (parent, {token, acc, type, key, query}) =>
 const cleanRepo = async (token, result, before, after) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
+
+  const branches = await fetchAll({
+    token,
+    acc: result.refs.nodes,
+    data: result,
+    type: 'Repository',
+    key: 'refs',
+    count: 100,
+    query: commitQ(before, after)
+  })
+
+  const targets = Array.from(branches).map(b => b.target)
+
+  const commits = await depaginateAll(targets, {
+    token,
+    acc: ref => ref.history.nodes,
+    type: 'Commit',
+    key: 'history',
+    query: commitHistoryQ
+  })
+
+  const commitAuthors = Array.from(commits).map(x => x.author)
 
   const prs = await fetchAll({
     token,
@@ -286,6 +339,7 @@ const cleanRepo = async (token, result, before, after) => {
   }))
 
   return {
+    commitAuthors: mergeContributions(users(commitAuthors)),
     commitCommentators: process(commitComments),
     prCreators: process(prs),
     prCommentators: process(prComments),

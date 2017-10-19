@@ -56,8 +56,8 @@ const cli = meow([`
 
 const token = cli.flags.t || process.env.GITHUB_TOKEN
 
-const after = cli.flags.a && new Date(cli.flags.a)
-const before = cli.flags.b && new Date(cli.flags.b)
+const after = cli.flags.a && new Date(cli.flags.a) || new Date(0)
+const before = cli.flags.b && new Date(cli.flags.b) || new Date()
 
 const debugMode = cli.flags.debug
 

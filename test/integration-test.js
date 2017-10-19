@@ -37,12 +37,13 @@ test('No contributions in a single second', t => {
     token: token,
     user: 'RichardLitt',
     repo: 'name-your-contributors',
-    after: '2016-01-01T15:21:08.104Z',
-    before: '2016-01-02T15:21:08.104Z'
+    after: new Date('2016-01-01T15:21:08.104Z'),
+    before: new Date('2016-01-02T15:21:08.104Z')
   }).then(result => {
     for (let key in result) {
       t.deepEqual(result[key], [])
-    }})
+    }
+  })
 })
 
 const compareKeys = (x, k) =>
@@ -64,7 +65,8 @@ test('Contributors before a fixed date remain static', t => {
     token: token,
     user: 'RichardLitt',
     repo: 'name-your-contributors',
-    before: '2017-09-21'
+    before: new Date('2017-09-21'),
+    after: new Date(0)
   }).then(result => {
     t.true(compareKeys(result, 'prCreators'))
     t.true(compareKeys(result, 'prCommentators'))
@@ -76,7 +78,9 @@ test('Contributors before a fixed date remain static', t => {
 test('Queries without tokens get rejected', t => {
   return main.repoContributors({
     user: 'RichardLitt',
-    repo: 'name-your-contributors'
+    repo: 'name-your-contributors',
+    before: new Date(),
+    after: new Date(0)
   }).catch(error => t.is(error.message, 'Unauthorized'))
 })
 
