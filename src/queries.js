@@ -149,7 +149,13 @@ const mergeContributions = xs => {
     if (m.has(key)) {
       m.get(key).count += x.count
     } else {
-      m.set(key, x)
+      m.set(key, {
+        // Poor man's clone
+        login: x.login,
+        name: x.name,
+        url: x.url,
+        count: x.count
+      })
     }
   }
   return Array.from(m.values())
@@ -285,6 +291,7 @@ module.exports = {
   users,
   cleanRepo,
   mergeContributions,
+  mergeArrays,
   mergeRepoResults,
   authoredQ,
   userRepos,

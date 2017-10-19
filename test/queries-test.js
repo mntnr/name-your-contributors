@@ -44,12 +44,22 @@ test('time filtering <=', t => {
 })
 
 test('merge', t => {
-  const testusers = [{login: 'x', count: 1}, {login: 'y', count: 1},
-                     {login: 'x', count: 3}, {login: 'z', count: 2}]
+  const testusers = [{login: 'x', count: 1, name: 'x', url: 'x'},
+                     {login: 'y', count: 1, name: 'x', url: 'x'},
+                     {login: 'x', count: 3, name: 'x', url: 'x'},
+                     {login: 'z', count: 2, name: 'x', url: 'x'}]
 
-  t.deepEqual(q.mergeContributions(testusers), [{login: 'x', count: 4},
-                                                {login: 'y', count: 1},
-                                                {login: 'z', count: 2}])
+  t.deepEqual(q.mergeContributions(testusers), [
+    {login: 'x', count: 4, name: 'x', url: 'x'},
+    {login: 'y', count: 1, name: 'x', url: 'x'},
+    {login: 'z', count: 2, name: 'x', url: 'x'}
+  ])
+  // Objects don't get modified when counting:
+  t.deepEqual(q.mergeArrays(testusers, testusers), [
+    {login: 'x', count: 8, name: 'x', url: 'x'},
+    {login: 'y', count: 2, name: 'x', url: 'x'},
+    {login: 'z', count: 4, name: 'x', url: 'x'}
+  ])
 })
 
 test('null users get filtered', t => {
