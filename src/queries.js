@@ -301,25 +301,12 @@ const mergeArrays = (a, b) =>
 
 /** Recursively merges all contributor maps in the list into a single map */
 const mergeRepoResults = repos =>
-      repos.reduce((
-        acc, {
-          prCreators,
-          prCommentators,
-          issueCreators,
-          issueCommentators
+      repos.reduce((acc, obj) => {
+        const ret = {}
+        for (let key in obj) {
+          ret[key] = mergeArrays(obj[key], acc[key] || [])
         }
-      ) => {
-        return {
-          prCreators: mergeArrays(acc.prCreators, prCreators),
-          prCommentators: mergeArrays(acc.prCommentators, prCommentators),
-          issueCreators: mergeArrays(acc.issueCreators, issueCreators),
-          issueCommentators: mergeArrays(acc.issueCommentators, issueCommentators)
-        }
-      }, {
-        prCreators: [],
-        prCommentators: [],
-        issueCreators: [],
-        issueCommentators: []
+        return ret
       })
 
 const cleanOrgRepos = async (token, result, before, after) => {
