@@ -56,8 +56,10 @@ const cli = meow([`
 
 const token = cli.flags.t || process.env.GITHUB_TOKEN
 
+/* eslint-disable no-mixed-operators */
 const after = cli.flags.a && new Date(cli.flags.a) || new Date(0)
 const before = cli.flags.b && new Date(cli.flags.b) || new Date()
+/* eslint-enable no-mixed-operators */
 
 const debugMode = cli.flags.debug
 
