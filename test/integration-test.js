@@ -32,16 +32,6 @@ const contribPre = {
     ['diasdavid', 'David Dias']])
 }
 
-const emptyResponse = {
-  commitCommentators: [],
-  reactors: [],
-  prCreators: [],
-  prCommentators: [],
-  issueCreators: [],
-  issueCommentators: [],
-  reviewers: []
-}
-
 test('No contributions in a single second', t => {
   return main.repoContributors({
     token: token,
@@ -49,7 +39,10 @@ test('No contributions in a single second', t => {
     repo: 'name-your-contributors',
     after: '2016-01-01T15:21:08.104Z',
     before: '2016-01-02T15:21:08.104Z'
-  }).then(result => t.deepEqual(result, emptyResponse))
+  }).then(result => {
+    for (let key in result) {
+      t.deepEqual(result[key], [])
+    }})
 })
 
 const compareKeys = (x, k) =>
