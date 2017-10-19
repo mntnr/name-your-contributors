@@ -38,7 +38,8 @@ const emptyResponse = {
   prCreators: [],
   prCommentators: [],
   issueCreators: [],
-  issueCommentators: []
+  issueCommentators: [],
+  reviewers: []
 }
 
 test('No contributions in a single second', t => {

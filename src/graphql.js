@@ -130,6 +130,9 @@ const executequery = (token, query, debugMode) => {
         })
       })
     req.on('error', reject)
+    if (debugMode) {
+      console.log(formatQuery(query))
+    }
     req.write(formatQuery(query))
     req.end()
   })
