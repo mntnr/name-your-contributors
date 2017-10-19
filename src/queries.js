@@ -175,6 +175,17 @@ const cleanUserRepos = async (token, x) => {
   return repos.map(x => x.name)
 }
 
+const depaginateAll = async (parent, {token, acc, type, key, query}) =>
+      flatten(await Promise.all(parent.map(x => fetchAll({
+        token,
+        type,
+        key,
+        query,
+        acc: acc(x),
+        data: x,
+        count: 100
+      }))))
+
 /** Parse repository query result and filter for date range. */
 const cleanRepo = async (token, result, before, after) => {
   const tf = timeFilter(before, after)
@@ -210,25 +221,21 @@ const cleanRepo = async (token, result, before, after) => {
     query: commitCommentQ
   })
 
-  const prCs = flatten(await Promise.all(prs.map(pr => fetchAll({
+  const prCs = await depaginateAll(prs, {
     token,
-    acc: pr.comments.nodes,
-    data: pr,
+    acc: pr => pr.comments.nodes,
     type: 'PullRequest',
     key: 'comments',
-    count: 100,
     query: authoredQ
-  }))))
+  })
 
-  const issueCs = flatten(await Promise.all(issues.map(issue => fetchAll({
+  const issueCs = await depaginateAll(issues, {
     token,
-    acc: issue.comments.nodes,
-    data: issue,
+    acc: issue => issue.comments.nodes,
     type: 'Issue',
     key: 'comments',
-    count: 100,
     query: authoredQ
-  }))))
+  })
 
   return {
     commitCommentators: process(commitComments),
