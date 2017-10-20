@@ -225,10 +225,35 @@ const depaginateAll = async (parent, {token, acc, type, key, query}) =>
         count: 100
       }))))
 
+const ascendingOrder = (a, b) => b.count - a.count
+
 /** Parse repository query result and filter for date range. */
 const cleanRepo = async (token, result, before, after) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
+        .sort(ascendingOrder)
+
+  const branches = await fetchAll({
+    token,
+    acc: result.refs.nodes,
+    data: result,
+    type: 'Repository',
+    key: 'refs',
+    count: 100,
+    query: commitQ(before, after)
+  })
+
+  const targets = Array.from(branches).map(b => b.target)
+
+  const commits = await depaginateAll(targets, {
+    token,
+    acc: ref => ref.history.nodes,
+    type: 'Commit',
+    key: 'history',
+    query: commitHistoryQ
+  })
+
+  const commitAuthors = Array.from(commits).map(x => x.author)
 
   const branches = await fetchAll({
     token,
@@ -339,7 +364,8 @@ const cleanRepo = async (token, result, before, after) => {
   }))
 
   return {
-    commitAuthors: mergeContributions(users(commitAuthors)),
+    commitAuthors: mergeContributions(users(commitAuthors))
+      .sort(ascendingOrder),
     commitCommentators: process(commitComments),
     prCreators: process(prs),
     prCommentators: process(prComments),
