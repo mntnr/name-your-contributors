@@ -255,6 +255,28 @@ const cleanRepo = async (token, result, before, after) => {
 
   const commitAuthors = Array.from(commits).map(x => x.author)
 
+  const branches = await fetchAll({
+    token,
+    acc: result.refs.nodes,
+    data: result,
+    type: 'Repository',
+    key: 'refs',
+    count: 100,
+    query: commitQ(before, after)
+  })
+
+  const targets = Array.from(branches).map(b => b.target)
+
+  const commits = await depaginateAll(targets, {
+    token,
+    acc: ref => ref.history.nodes,
+    type: 'Commit',
+    key: 'history',
+    query: commitHistoryQ
+  })
+
+  const commitAuthors = Array.from(commits).map(x => x.author)
+
   const prs = await fetchAll({
     token,
     acc: result.pullRequests.nodes,
