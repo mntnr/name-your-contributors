@@ -1,26 +1,8 @@
-#!/usr/bin/env node
+()#!/usr/bin/env node
 'use strict'
 
 const meow = require('meow')
-const csv = require('csv-writer').createArrayCsvStringifier
 const main = require('./index')
-
-const flatten = json => {
-  const prs = json.prCreators.map(x => ['pr creator'].concat(x))
-  const prcs = json.prCommentators.map(x => ['pr commentator'].concat(x))
-  const is = json.issueCreators.map(x => ['issue creator'].concat(x))
-  const iscs = json.issueCommentators.map(x => ['issue commentator'].concat(x))
-
-  return prs.concat(prcs).concat(is).concat(iscs)
-}
-
-const toCSV = json => {
-  const writer = csv({
-    header: ['TYPE', 'LOGIN', 'NAME']
-  })
-  return writer.getHeaderString() +
-    writer.stringifyRecords(flatten(json))
-}
 
 const cli = meow([`
   Usage
@@ -81,7 +63,7 @@ if (cli.flags.o && token) {
     after: after
   }).then(x => {
     if (cli.flags.csv) {
-      return toCSV(x)
+      return main.toCSV(x)
     } else {
       return JSON.stringify(x, null, 2)
     }

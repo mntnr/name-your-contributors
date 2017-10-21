@@ -2,6 +2,53 @@
 
 const graphql = require('./graphql')
 const queries = require('./queries')
+const csv = require('csv-writer').createArrayCsvStringifier
+const exec = require('child_process').exec
+
+//
+// Shell Helpers
+//
+
+const shellOut = command =>
+      new Promise((resolve, reject) =>
+                  exec(command, (err, stdout, stderr) => {
+                    if (err) {
+                      reject(err)
+                    } else {
+                      resolve(stdout)
+                    }
+                  }))
+
+const gitConfig = 'git config --get remote.origin.url'
+
+const parseGitURL = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)\\n?$')
+
+const current = shellOut(gitConfig).then(x => parseGitURL.exec(x))
+
+//
+// CSV Output
+//
+
+const flatten = json => {
+  const prs = json.prCreators.map(x => ['pr creator'].concat(x))
+  const prcs = json.prCommentators.map(x => ['pr commentator'].concat(x))
+  const is = json.issueCreators.map(x => ['issue creator'].concat(x))
+  const iscs = json.issueCommentators.map(x => ['issue commentator'].concat(x))
+
+  return prs.concat(prcs).concat(is).concat(iscs)
+}
+
+const toCSV = json => {
+  const writer = csv({
+    header: ['TYPE', 'LOGIN', 'NAME']
+  })
+  return writer.getHeaderString() +
+    writer.stringifyRecords(flatten(json))
+}
+
+//
+// API
+//
 
 /** Returns all contributions to a repo.
   * @param token  - GitHub auth token
@@ -30,6 +77,7 @@ const orgContributors = ({token, orgName, before, after, debug}) =>
       .then(data => queries.cleanOrgRepos(token, data, before, after))
 
 module.exports = {
+  toCSV,
   repoContributors,
   orgContributors,
   userRepoNames
