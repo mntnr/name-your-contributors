@@ -63,10 +63,15 @@ const repoContributors = ({token, user, repo, before, after, debug}) =>
       graphql.executequery(token, queries.repository(repo, user, before, after), debug)
       .then(json => queries.cleanRepo(token, json.repository, before, after))
 
-/** Returns a list of names of all repos belonging to user. */
-const userRepoNames = ({token, login, debug}) =>
-      graphql.executequery(token, queries.userRepos(login), debug)
-      .then(x => queries.cleanUserRepos(token, x))
+/** Returns contributions to all repos owned by user.
+  * @param token   - GitHub auth token
+  * @param user    - login of user
+  * @param before  - only return contributions before this timestamp
+  * @param after   - only return contributions after this timestamp
+  */
+const userContributors = ({token, user, debug, before, after}) =>
+      graphql.executequery(token, queries.userRepos(user, before, after), debug)
+      .then(x => queries.cleanUserRepos(token, x, before, after))
 
 /** Returns contributions to all repos owned by orgName.
   * @param token   - GitHub auth token
@@ -91,5 +96,5 @@ module.exports = {
   currentUser,
   repoContributors,
   orgContributors,
-  userRepoNames
+  userContributors
 }

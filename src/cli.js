@@ -91,7 +91,15 @@ if (cli.flags.o) {
 } else if (cli.flags.r) {
   main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
 } else if (cli.flags.u) {
-
+  main.userContributors({
+    token,
+    user: cli.flags.u,
+    debug: debugMode,
+    before,
+    after
+  }).then(formatReturn)
+    .then(handleOut)
+    .catch(handleError)
 } else {
   main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
 }

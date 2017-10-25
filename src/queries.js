@@ -92,33 +92,25 @@ const repository = (repoName, ownerName, before, after) =>
       .addChild(prsQ)
       .addChild(issuesQ)
 
-/** Returns a query which retrieves names of all repos from an organisation. */
-const organization = name =>
-      node('organization', {login: name})
-      .addChild(node('id'))
-      .addChild(node('repositories', {first: 100}, pagination)
-                .addChild(node('nodes')
-                          .addChild(node('id'))
-                          .addChild(node('name'))))
+const repositories = (before, after) =>
+      node('repositories', {first: 5})
+      .addChild(pagination)
+      .addChild(node('nodes')
+                .addChild(node('id'))
+                .addChild(commitCommentQ)
+                .addChild(refsQ(before, after))
+                .addChild(prsQ)
+                .addChild(issuesQ))
 
 const orgRepos = (name, before, after) =>
       node('organization', {login: name})
       .addChild(node('id'))
-      .addChild(node('repositories', {first: 25})
-                .addChild(pagination)
-                .addChild(node('nodes')
-                          .addChild(node('id'))
-                          .addChild(commitCommentQ)
-                          .addChild(refsQ(before, after))
-                          .addChild(prsQ)
-                          .addChild(issuesQ)))
+      .addChild(repositories(before, after))
 
-const userRepos = login =>
+const userRepos = (login, before, after) =>
       node('user', {login})
       .addChild(node('id'))
-      .addChild(node('repositories', {first: 100})
-                .addChild(pagination)
-                .addChild(node('nodes').addChild(node('name'))))
+      .addChild(repositories(before, after))
 
 const continuationQuery = (id, parentType, childType, cursor, n, query) =>
       node('node', {id})
@@ -202,20 +194,6 @@ const mergeContributions = xs => {
   return Array.from(m.values())
 }
 
-const cleanUserRepos = async (token, x) => {
-  const repos = await fetchAll({
-    token,
-    acc: x.user.repositories.nodes,
-    data: x.user,
-    type: 'User',
-    key: 'repositories',
-    count: 100,
-    query: node('nodes').addChild(node('name'))
-  })
-
-  return repos.map(x => x.name)
-}
-
 const depaginateAll = async (parent, {token, acc, type, key, query}) =>
       flatten(await Promise.all(parent.map(x => fetchAll({
         token,
@@ -224,7 +202,7 @@ const depaginateAll = async (parent, {token, acc, type, key, query}) =>
         query,
         acc: acc(x),
         data: x,
-        count: 100
+        count: 50
       }))))
 
 /** Parse repository query result and filter for date range. */
@@ -372,8 +350,23 @@ const cleanOrgRepos = async (token, result, before, after) => {
     data: result.organization,
     type: 'Organization',
     key: 'repositories',
-    count: 25,
-    query: node('nodes').addChild(node('id')).addChild(prsQ).addChild(issuesQ)
+    count: 20,
+    query: repositories(before, after)
+  })
+
+  return mergeRepoResults(
+    await Promise.all(repos.map(repo => cleanRepo(token, repo, before, after))))
+}
+
+const cleanUserRepos = async (token, x, before, after) => {
+  const repos = await fetchAll({
+    token,
+    acc: x.user.repositories.nodes,
+    data: x.user,
+    type: 'User',
+    key: 'repositories',
+    count: 20,
+    query: repositories(before, after)
   })
 
   return mergeRepoResults(
@@ -386,7 +379,6 @@ module.exports = {
   whoAmI,
   cleanWhoAmI,
   repository,
-  organization,
   orgRepos,
   cleanOrgRepos,
   timeFilter,
