@@ -64,6 +64,18 @@ const handleError = e => {
   process.exit(1)
 }
 
+const fetchRepo = (user, repo) =>
+      main.repoContributors({
+        user,
+        repo,
+        before,
+        after,
+        token,
+        debug: debugMode
+      }).then(formatReturn)
+      .then(handleOut)
+      .catch(handleError)
+
 if (cli.flags.o) {
   main.orgContributors({
     debug: debugMode,
@@ -75,37 +87,11 @@ if (cli.flags.o) {
     .then(handleOut)
     .catch(handleError)
 } else if (cli.flags.u && cli.flags.r) {
-  main.repoContributors({
-    debug: debugMode,
-    token: token,
-    user: cli.flags.u,
-    repo: cli.flags.r,
-    before: before,
-    after: after
-  }).then(formatReturn)
-    .then(handleOut)
-    .catch(handleError)
-} else {
-  (async () => {
-    const creds = await main.getCurrentRepoInfo()
+  fetchRepo(cli.flags.u, cli.flags.r)
+} else if (cli.flags.r) {
+  main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
+} else if (cli.flags.u) {
 
-    return main.repoContributors({
-      token,
-      debug: debugMode,
-      user: creds.user,
-      repo: creds.repo,
-      before,
-      after
-    }).then(x => {
-      if (!x.user || !x.repo) {
-        return x
-      } else {
-        console.error('Not in a git repository')
-        console.error(cli.help)
-        process.exit(1)
-      }
-    }).then(formatReturn)
-      .then(handleOut)
-      .catch(handleError)
-  })()
+} else {
+  main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
 }

@@ -7,6 +7,8 @@ const node = graphql.queryNode
 // Queries
 /// //
 
+const whoAmI = node('viewer').addChild(node('login'))
+
 const pagination = node('pageInfo')
       .addChild(node('endCursor'))
       .addChild(node('hasNextPage'))
@@ -378,7 +380,11 @@ const cleanOrgRepos = async (token, result, before, after) => {
     await Promise.all(repos.map(repo => cleanRepo(token, repo, before, after))))
 }
 
+const cleanWhoAmI = x => x.viewer.login
+
 module.exports = {
+  whoAmI,
+  cleanWhoAmI,
   repository,
   organization,
   orgRepos,

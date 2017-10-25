@@ -78,9 +78,17 @@ const orgContributors = ({token, orgName, before, after, debug}) =>
       graphql.executequery(token, queries.orgRepos(orgName, before, after), debug)
       .then(data => queries.cleanOrgRepos(token, data, before, after))
 
+/** Returns the login of the user to whom the given token is registered.
+  * @param token - GitHub Auth token
+  */
+const currentUser = token =>
+      graphql.executequery(token, queries.whoAmI)
+      .then(queries.cleanWhoAmI)
+
 module.exports = {
   toCSV,
   getCurrentRepoInfo,
+  currentUser,
   repoContributors,
   orgContributors,
   userRepoNames
