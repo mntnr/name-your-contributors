@@ -1,4 +1,4 @@
-()#!/usr/bin/env node
+#!/usr/bin/env node
 'use strict'
 
 const meow = require('meow')
@@ -32,6 +32,7 @@ const cli = meow([`
     c: 'csv',
     r: 'repo',
     t: 'token',
+    o: 'org',
     u: 'user'
   }
 })
@@ -43,17 +44,37 @@ const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
 
 const debugMode = cli.flags.debug
 
-if (cli.flags.o && token) {
+if (!token) {
+  console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
+  process.exit(1)
+}
+
+const formatReturn = x => {
+  if (cli.flags.csv) {
+    return main.toCSV(x)
+  } else {
+    return JSON.stringify(x, null, 2)
+  }
+}
+
+const handleOut = console.log
+
+const handleError = e => {
+  console.error(e.stack)
+  process.exit(1)
+}
+
+if (cli.flags.o) {
   main.orgContributors({
     debug: debugMode,
     token: token,
     orgName: cli.flags.o,
     before: before,
     after: after
-  }).then(json => JSON.stringify(json, null, 2))
-    .then(console.log)
-    .catch(e => console.error(e.message))
-} else if (cli.flags.u && cli.flags.r && token) {
+  }).then(formatReturn)
+    .then(handleOut)
+    .catch(handleError)
+} else if (cli.flags.u && cli.flags.r) {
   main.repoContributors({
     debug: debugMode,
     token: token,
@@ -61,17 +82,30 @@ if (cli.flags.o && token) {
     repo: cli.flags.r,
     before: before,
     after: after
-  }).then(x => {
-    if (cli.flags.csv) {
-      return main.toCSV(x)
-    } else {
-      return JSON.stringify(x, null, 2)
-    }
-  }).then(console.log)
-    .catch(e => {
-      console.error(e.stack)
-    })
+  }).then(formatReturn)
+    .then(handleOut)
+    .catch(handleError)
 } else {
-  console.error('You must currently specify both a user and a repo name. And provide a token.')
-  process.exit(1)
+  (async () => {
+    const creds = await main.getCurrentRepoInfo()
+
+    return main.repoContributors({
+      token,
+      debug: debugMode,
+      user: creds.user,
+      repo: creds.repo,
+      before,
+      after
+    }).then(x => {
+      if (!x.user || !x.repo) {
+        return x
+      } else {
+        console.error('Not in a git repository')
+        console.error(cli.help)
+        process.exit(1)
+      }
+    }).then(formatReturn)
+      .then(handleOut)
+      .catch(handleError)
+  })()
 }

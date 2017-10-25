@@ -19,11 +19,13 @@ const shellOut = command =>
                     }
                   }))
 
-const gitConfig = 'git config --get remote.origin.url'
+const gitConfigCommand = 'git config --get remote.origin.url'
 
 const parseGitURL = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)\\n?$')
 
-const current = shellOut(gitConfig).then(x => parseGitURL.exec(x))
+const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
+      .then(x => parseGitURL.exec(x))
+      .then(x => { return {user: x[1], repo: x[2]} })
 
 //
 // CSV Output
@@ -78,6 +80,7 @@ const orgContributors = ({token, orgName, before, after, debug}) =>
 
 module.exports = {
   toCSV,
+  getCurrentRepoInfo,
   repoContributors,
   orgContributors,
   userRepoNames
