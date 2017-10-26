@@ -64,42 +64,26 @@ const handleError = e => {
   process.exit(1)
 }
 
+const callWithDefaults = (f, opts) => {
+  opts.before = before
+  opts.after = after
+  opts.token = token
+  opts.debug = debugMode
+
+  return f(opts).then(formatReturn).then(handleOut).catch(handleError)
+}
+
 const fetchRepo = (user, repo) =>
-      main.repoContributors({
-        user,
-        repo,
-        before,
-        after,
-        token,
-        debug: debugMode
-      }).then(formatReturn)
-      .then(handleOut)
-      .catch(handleError)
+      callWithDefaults(main.repoContributors, {user, repo})
 
 if (cli.flags.o) {
-  main.orgContributors({
-    debug: debugMode,
-    token: token,
-    orgName: cli.flags.o,
-    before: before,
-    after: after
-  }).then(formatReturn)
-    .then(handleOut)
-    .catch(handleError)
+  callWithDefaults(main.orgContributors, {orgName: cli.flags.o})
 } else if (cli.flags.u && cli.flags.r) {
   fetchRepo(cli.flags.u, cli.flags.r)
 } else if (cli.flags.r) {
   main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
 } else if (cli.flags.u) {
-  main.userContributors({
-    token,
-    user: cli.flags.u,
-    debug: debugMode,
-    before,
-    after
-  }).then(formatReturn)
-    .then(handleOut)
-    .catch(handleError)
+  callWithDefaults(main.userContributors, {user: cli.flags.u})
 } else {
   main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
 }
