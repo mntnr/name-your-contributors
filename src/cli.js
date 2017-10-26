@@ -83,7 +83,8 @@ if (cli.flags.o) {
 } else if (cli.flags.r) {
   main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
 } else if (cli.flags.u) {
-  callWithDefaults(main.userContributors, {user: cli.flags.u})
+  console.error('-u alone is not currently supported. Rate limits make it infeasible')
+  // callWithDefaults(main.userContributors, {user: cli.flags.u})
 } else {
   main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
 }

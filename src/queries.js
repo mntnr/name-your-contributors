@@ -66,7 +66,7 @@ const reviewQ = node('reviews', {first: 20})
       .addChild(authoredQ)
 
 const participantsQ = authoredWithReactionsQ
-      .addChild(node('comments', {first: 100})
+      .addChild(node('comments', {first: 50})
                 .addChild(pagination)
                 .addChild(authoredWithReactionsQ))
 
