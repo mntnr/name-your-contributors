@@ -70,16 +70,16 @@ const participantsQ = authoredWithReactionsQ
                 .addChild(pagination)
                 .addChild(authoredWithReactionsQ))
 
-const prsQ = node('pullRequests', {first: 100})
+const prsQ = node('pullRequests', {first: 50})
       .addChild(pagination)
       .addChild(participantsQ
                 .addChild(reviewQ))
 
-const issuesQ = node('issues', {first: 100})
+const issuesQ = node('issues', {first: 50})
       .addChild(pagination)
       .addChild(participantsQ)
 
-const commitCommentQ = node('commitComments', {first: 100})
+const commitCommentQ = node('commitComments', {first: 50})
       .addChild(pagination)
       .addChild(authoredQ)
 
@@ -92,15 +92,18 @@ const repository = (repoName, ownerName, before, after) =>
       .addChild(prsQ)
       .addChild(issuesQ)
 
+const repositoryCont = (before, after) =>
+      node('nodes')
+      .addChild(node('id'))
+      .addChild(commitCommentQ)
+      .addChild(refsQ(before, after))
+      .addChild(prsQ)
+      .addChild(issuesQ)
+
 const repositories = (before, after) =>
       node('repositories', {first: 5})
       .addChild(pagination)
-      .addChild(node('nodes')
-                .addChild(node('id'))
-                .addChild(commitCommentQ)
-                .addChild(refsQ(before, after))
-                .addChild(prsQ)
-                .addChild(issuesQ))
+      .addChild(repositoryCont(before, after))
 
 const orgRepos = (name, before, after) =>
       node('organization', {login: name})
@@ -351,7 +354,7 @@ const cleanOrgRepos = async (token, result, before, after) => {
     type: 'Organization',
     key: 'repositories',
     count: 20,
-    query: repositories(before, after)
+    query: repositoryCont(before, after)
   })
 
   return mergeRepoResults(
@@ -365,8 +368,8 @@ const cleanUserRepos = async (token, x, before, after) => {
     data: x.user,
     type: 'User',
     key: 'repositories',
-    count: 20,
-    query: repositories(before, after)
+    count: 5,
+    query: repositoryCont(before, after)
   })
 
   return mergeRepoResults(
