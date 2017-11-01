@@ -70,10 +70,11 @@ const participantsQ = authoredWithReactionsQ
                 .addChild(pagination)
                 .addChild(authoredWithReactionsQ))
 
+const prsContQ = participantsQ.addChild(reviewQ)
+
 const prsQ = node('pullRequests', {first: 50})
       .addChild(pagination)
-      .addChild(participantsQ
-                .addChild(reviewQ))
+      .addChild(prsContQ)
 
 const issuesQ = node('issues', {first: 50})
       .addChild(pagination)
@@ -81,7 +82,7 @@ const issuesQ = node('issues', {first: 50})
 
 const commitCommentQ = node('commitComments', {first: 50})
       .addChild(pagination)
-      .addChild(authoredQ)
+      .addChild(authoredWithReactionsQ)
 
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName, before, after) =>
@@ -251,7 +252,7 @@ const cleanRepo = async (token, result, before, after) => {
     type: 'Repository',
     key: 'pullRequests',
     count: 100,
-    query: participantsQ
+    query: prsContQ
   })
 
   const issues = await fetchAll({
