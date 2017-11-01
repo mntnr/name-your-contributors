@@ -130,14 +130,19 @@ const continuationQuery = (id, parentType, childType, cursor, n, query) =>
 /** Recursive fetcher keeps grabbing the next page from the API until there are
   * none left. Returns the aggregate result of all fetches.
   */
-const fetchAll = async ({token, acc, data, type, key, count, query}) => {
+const fetchAll = async ({token, acc, data, type, key, count, query, name}) => {
   if (data[key].pageInfo.hasNextPage) {
-    const next = await graphql.executequery(
-      token, continuationQuery(
-        data.id, type, key, data[key].pageInfo.endCursor, count, query))
+    const next = await graphql.executequery({
+      token,
+      name,
+      verbose: true,
+      query: continuationQuery(
+        data.id, type, key, data[key].pageInfo.endCursor, count, query)
+    })
 
     return fetchAll({
       token,
+      name,
       acc: acc.concat(next.node[key].nodes),
       data: next.node,
       type,
@@ -197,8 +202,9 @@ const mergeContributions = xs => {
   return Array.from(m.values())
 }
 
-const depaginateAll = async (parent, {token, acc, type, key, query}) =>
+const depaginateAll = async (parent, {token, acc, type, key, query, name}) =>
       flatten(await Promise.all(parent.map(x => fetchAll({
+        name,
         token,
         type,
         key,
@@ -215,6 +221,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const branches = await fetchAll({
     token,
+    name: 'refsCont',
     acc: result.refs.nodes,
     data: result,
     type: 'Repository',
@@ -227,6 +234,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const commits = await depaginateAll(targets, {
     token,
+    name: 'commitsCont',
     acc: ref => ref.history.nodes,
     type: 'Commit',
     key: 'history',
@@ -237,6 +245,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const prs = await fetchAll({
     token,
+    name: 'prs cont',
     acc: result.pullRequests.nodes,
     data: result,
     type: 'Repository',
@@ -247,6 +256,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const issues = await fetchAll({
     token,
+    name: 'issues cont',
     acc: result.issues.nodes,
     data: result,
     type: 'Repository',
@@ -257,6 +267,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const commitComments = await fetchAll({
     token,
+    name: 'commit comments cont',
     acc: result.commitComments.nodes,
     data: result,
     type: 'Repository',
@@ -267,6 +278,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const reviews = await depaginateAll(prs, {
     token,
+    name: 'reviews cont',
     acc: pr => pr.reviews.nodes,
     type: 'PullRequest',
     key: 'reviews',
@@ -275,6 +287,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const prComments = await depaginateAll(prs, {
     token,
+    name: 'pr comments cont',
     acc: pr => pr.comments.nodes,
     type: 'PullRequest',
     key: 'comments',
@@ -283,6 +296,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const issueComments = await depaginateAll(issues, {
     token,
+    name: 'issue comments cont',
     acc: issue => issue.comments.nodes,
     type: 'Issue',
     key: 'comments',
@@ -291,30 +305,35 @@ const cleanRepo = async (token, result, before, after) => {
 
   const reactions = Array.from(await depaginateAll(commitComments, {
     token,
+    name: 'reactions cont',
     acc: cc => cc.reactions.nodes,
     type: 'CommitComment',
     key: 'reactions',
     query: reactorQ
   })).concat(await depaginateAll(issueComments, {
     token,
+    name: 'issue comment reactions cont',
     acc: ic => ic.reactions.nodes,
     type: 'IssueComment',
     key: 'reactions',
     query: reactorQ
   })).concat(await depaginateAll(prComments, {
     token,
+    name: 'pr comment reactions cont',
     acc: prc => prc.reactions.nodes,
     type: 'PullRequestComment',
     key: 'reactions',
     query: reactorQ
   })).concat(await depaginateAll(issues, {
     token,
+    name: 'issue reactions cont',
     acc: is => is.reactions.nodes,
     type: 'Issue',
     key: 'reactions',
     query: participantsQ
   })).concat(await depaginateAll(prs, {
     token,
+    name: 'pullrequest reactions cont',
     acc: pr => pr.reactions.nodes,
     type: 'PullRequest',
     key: 'reactions',
@@ -349,6 +368,7 @@ const mergeRepoResults = repos =>
 const cleanOrgRepos = async (token, result, before, after) => {
   const repos = await fetchAll({
     token,
+    name: 'org repos cont',
     acc: result.organization.repositories.nodes,
     data: result.organization,
     type: 'Organization',
@@ -364,6 +384,7 @@ const cleanOrgRepos = async (token, result, before, after) => {
 const cleanUserRepos = async (token, x, before, after) => {
   const repos = await fetchAll({
     token,
+    name: 'user repos cont',
     acc: x.user.repositories.nodes,
     data: x.user,
     type: 'User',

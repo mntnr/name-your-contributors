@@ -33,7 +33,8 @@ const cli = meow([`
     r: 'repo',
     t: 'token',
     o: 'org',
-    u: 'user'
+    u: 'user',
+    v: 'verbose'
   }
 })
 
@@ -41,8 +42,6 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 
 const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
 const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
-
-const debugMode = cli.flags.debug
 
 if (!token) {
   console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
@@ -61,14 +60,16 @@ const handleOut = console.log
 
 const handleError = e => {
   console.error(e.stack)
-  process.exit(1)
+
 }
 
 const callWithDefaults = (f, opts) => {
   opts.before = before
   opts.after = after
   opts.token = token
-  opts.debug = debugMode
+  opts.debug = cli.flags.debug
+  opts.dryRun = cli.flags.dryRun
+  opts.verbose = cli.flags.v
 
   return f(opts).then(formatReturn).then(handleOut).catch(handleError)
 }
@@ -82,9 +83,6 @@ if (cli.flags.o) {
   fetchRepo(cli.flags.u, cli.flags.r)
 } else if (cli.flags.r) {
   main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
-} else if (cli.flags.u) {
-  console.error('-u alone is not currently supported. Rate limits make it infeasible')
-  // callWithDefaults(main.userContributors, {user: cli.flags.u})
 } else {
   main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
 }

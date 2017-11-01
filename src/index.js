@@ -59,19 +59,22 @@ const toCSV = json => {
   * @param before - only return contributions before this timestamp
   * @param after  - only return contributions after this timestamp
   */
-const repoContributors = ({token, user, repo, before, after, debug}) =>
-      graphql.executequery(token, queries.repository(repo, user, before, after), debug)
-      .then(json => queries.cleanRepo(token, json.repository, before, after))
-
-/** Returns contributions to all repos owned by user.
-  * @param token   - GitHub auth token
-  * @param user    - login of user
-  * @param before  - only return contributions before this timestamp
-  * @param after   - only return contributions after this timestamp
-  */
-const userContributors = ({token, user, debug, before, after}) =>
-      graphql.executequery(token, queries.userRepos(user, before, after), debug)
-      .then(x => queries.cleanUserRepos(token, x, before, after))
+const repoContributors = (
+  {token, user, repo, before, after, debug, dryRun, verbose}) =>
+      graphql.executequery({
+        token,
+        debug,
+        dryRun,
+        verbose,
+        name: 'repoContributors',
+        query: queries.repository(repo, user, before, after)
+      }).then(json => {
+        if (dryRun) {
+          return json
+        } else {
+          return queries.cleanRepo(token, json.repository, before, after)
+        }
+      })
 
 /** Returns contributions to all repos owned by orgName.
   * @param token   - GitHub auth token
@@ -79,22 +82,35 @@ const userContributors = ({token, user, debug, before, after}) =>
   * @param before  - only return contributions before this timestamp
   * @param after   - only return contributions after this timestamp
   */
-const orgContributors = ({token, orgName, before, after, debug}) =>
-      graphql.executequery(token, queries.orgRepos(orgName, before, after), debug)
-      .then(data => queries.cleanOrgRepos(token, data, before, after))
+const orgContributors = ({token, orgName, before, after, debug, dryRun, verbose}) =>
+      graphql.executequery({
+        token,
+        debug,
+        dryRun,
+        verbose,
+        name: 'orgContributors',
+        query: queries.orgRepos(orgName, before, after)
+      }).then(data => {
+        if (dryRun) {
+          return data
+        } else {
+          return queries.cleanOrgRepos(token, data, before, after)
+        }
+      })
 
 /** Returns the login of the user to whom the given token is registered.
   * @param token - GitHub Auth token
   */
 const currentUser = token =>
-      graphql.executequery(token, queries.whoAmI)
-      .then(queries.cleanWhoAmI)
+      graphql.executequery({
+        token,
+        query: queries.whoAmI
+      }).then(queries.cleanWhoAmI)
 
 module.exports = {
   toCSV,
   getCurrentRepoInfo,
   currentUser,
   repoContributors,
-  orgContributors,
-  userContributors
+  orgContributors
 }

@@ -1,6 +1,7 @@
 'use strict'
 
 const https = require('https')
+const fs = require('fs')
 
 /** Escape strings to prevent injection attacks. Other types aren't an issue. */
 const escapeArgValue = val => {
@@ -70,24 +71,35 @@ const queryNode = (name, args = {}, children = []) => {
   return item
 }
 
-/** Returns a query string which just asks how much quota the given query would
-  * cost.
+/** Returns a query string which asks how much quota the given query would
+  * cost. Optionally prevents the query from running.
   */
-const queryCost = item => '{"query": ' +
-      JSON.stringify('query{rateLimit(dryRun: true){cost}\n' +
-                    item.toString() + '}') + '}'
+const queryCost = (item, dryRun) => '{"query": ' +
+      JSON.stringify(
+        `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining}\n` +
+          item.toString() + '}') + '}'
 
 /** Converts a queryNode object into a valid graphql query string according to
 Github's conventions. */
 const formatQuery = item => '{"query": ' +
       JSON.stringify('query{' + item.toString() + '}') + '}'
 
+// Global debug mode.
+let debugMode = false
+
 /**
   * Returns a promise which will yeild a query result.
-  * @param {string} token - Github auth token
-  * @param {queryNode} query - The query to execute
+  * @param {string}    token   - Github auth token.
+  * @param {queryNode} query   - The query to execute.
+  * @param {string}    name    - Name of this query. For debugging only.
+  * @param {bool}      verbose - Enable verbose logging.
+  * @param {bool}      debug   - Debug mode: VERY verbose logging.
+  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
   */
-const executequery = (token, query, debugMode) => {
+const executequery = ({token, query, debug, dryRun, verbose, name}) => {
+  if (debug) {
+    debugMode = true
+  }
   return new Promise((resolve, reject) => {
     let queryResponse = ''
     const headers = {
@@ -113,8 +125,14 @@ const executequery = (token, query, debugMode) => {
             const json = JSON.parse(queryResponse)
             if (json.data) {
               if (debugMode) {
-                console.log(JSON.stringify(json.data, null, 2))
+                console.log('Result of[' + name + ']: ' +
+                            JSON.stringify(json.data, null, 2))
               }
+              if (verbose) {
+                console.log('Cost of[' + name + ']: ' +
+                            JSON.stringify(json.data.rateLimit))
+              }
+
               resolve(json.data)
             } else {
               reject(new Error('Graphql error: ' + JSON.stringify(json, null, 2)))
@@ -129,11 +147,16 @@ const executequery = (token, query, debugMode) => {
           }
         })
       })
+
+    const runQ = queryCost(query, dryRun)
+
     req.on('error', reject)
+
     if (debugMode) {
-      console.log(formatQuery(query))
+      console.log('Query[' + name + ']: ' + JSON.stringify(runQ, null, 2))
     }
-    req.write(formatQuery(query))
+
+    req.write(runQ)
     req.end()
   })
 }
