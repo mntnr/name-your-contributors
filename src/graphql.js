@@ -153,7 +153,7 @@ const executequery = ({token, query, debug, dryRun, verbose, name}) => {
     req.on('error', reject)
 
     if (debugMode) {
-      console.log('Query[' + name + ']: ' + JSON.stringify(runQ, null, 2))
+      console.log('Query[' + name + ']: ' + runQ)
     }
 
     req.write(runQ)

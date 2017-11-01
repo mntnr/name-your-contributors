@@ -222,7 +222,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const branches = await fetchAll({
     token,
-    name: 'refsCont',
+    name: 'refs cont',
     acc: result.refs.nodes,
     data: result,
     type: 'Repository',
@@ -235,7 +235,7 @@ const cleanRepo = async (token, result, before, after) => {
 
   const commits = await depaginateAll(targets, {
     token,
-    name: 'commitsCont',
+    name: 'commits cont',
     acc: ref => ref.history.nodes,
     type: 'Commit',
     key: 'history',
@@ -382,22 +382,6 @@ const cleanOrgRepos = async (token, result, before, after) => {
     await Promise.all(repos.map(repo => cleanRepo(token, repo, before, after))))
 }
 
-const cleanUserRepos = async (token, x, before, after) => {
-  const repos = await fetchAll({
-    token,
-    name: 'user repos cont',
-    acc: x.user.repositories.nodes,
-    data: x.user,
-    type: 'User',
-    key: 'repositories',
-    count: 5,
-    query: repositoryCont(before, after)
-  })
-
-  return mergeRepoResults(
-    await Promise.all(repos.map(repo => cleanRepo(token, repo, before, after))))
-}
-
 const cleanWhoAmI = x => x.viewer.login
 
 module.exports = {
@@ -415,6 +399,5 @@ module.exports = {
   mergeRepoResults,
   authoredQ,
   userRepos,
-  cleanUserRepos,
   continuationQuery
 }
