@@ -25,7 +25,13 @@ const parseGitURL = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)\\n?$')
 
 const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
       .then(x => parseGitURL.exec(x))
-      .then(x => { return {user: x[1], repo: x[2]} })
+      .then(x => {
+        let repo = x[2]
+        if (repo.endsWith('.git')) {
+          repo = repo.substr(0, repo.length - 4)
+        }
+        return {user: x[1], repo}
+      })
 
 //
 // CSV Output
