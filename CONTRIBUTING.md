@@ -2,7 +2,7 @@
 
 Please contribute! Here are some things that would be great:
 
-- [Open an issue!](https://github.com/RichardLitt/name-your-contributors/issues/new)
+- [Open an issue!](https://github.com/mntnr/name-your-contributors/issues/new)
 - Open a pull request!
 - Say hi! 👋
 
