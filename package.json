@@ -16,6 +16,9 @@
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "keywords": [
+    "community",
+    "github",
+    "nodejs",
     "cli-app",
     "cli",
     "name",
@@ -23,7 +26,6 @@
     "contrib",
     "contributor",
     "contributors",
-    "github",
     "OSS",
     "open source",
     "commenters",
@@ -31,7 +33,6 @@
     "reviewers",
     "review",
     "code review",
-    "community",
     "contribute",
     "contributing"
   ],
@@ -50,5 +51,14 @@
   "coordinates": [
     45.5231596,
     -73.5870259
+  ],
+  "homepage": "https://github.com/mntnr/name-your-contributors",
+  "bugs": "https://github.com/mntnr/name-your-contributors/issues",
+  "contributors": [
+    {
+      "name": "Richard Littauer",
+      "email": "richard.littauer@gmail.com",
+      "url": "burntfen.com"
+    }
   ]
 }
