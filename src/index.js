@@ -21,17 +21,19 @@ const shellOut = command =>
 
 const gitConfigCommand = 'git config --get remote.origin.url'
 
-const parseGitURL = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)$')
+const parseGitURLRE = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)$')
+
+const parseGitURL = url => {
+  const parse = parseGitURLRE.exec(url.trim())
+  if (parse[2].endsWith('.git')) {
+    parse[2] = parse[2].substr(0, parse[2].length - 4)
+  }
+  return parse
+}
 
 const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
-      .then(x => parseGitURL.exec(x.trim()))
-      .then(x => {
-        let repo = x[2]
-        if (repo.endsWith('.git')) {
-          repo = repo.substr(0, repo.length - 4)
-        }
-        return {user: x[1], repo}
-      })
+      .then(parseGitURL)
+      .then(x => {return {user: x[1], repo: x[2]}})
 
 //
 // CSV Output
@@ -115,6 +117,7 @@ const currentUser = token =>
 
 module.exports = {
   toCSV,
+  parseGitURL,
   getCurrentRepoInfo,
   currentUser,
   repoContributors,

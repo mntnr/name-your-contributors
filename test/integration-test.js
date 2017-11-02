@@ -35,7 +35,7 @@ const contribPre = {
 test('No contributions in a single second', t => {
   return main.repoContributors({
     token: token,
-    user: 'RichardLitt',
+    user: 'mntnr',
     repo: 'name-your-contributors',
     after: new Date('2016-01-01T15:21:08.104Z'),
     before: new Date('2016-01-02T15:21:08.104Z')
@@ -63,7 +63,7 @@ const compareKeys = (x, k) =>
 test('Contributors before a fixed date remain static', t => {
   return main.repoContributors({
     token: token,
-    user: 'RichardLitt',
+    user: 'mntnr',
     repo: 'name-your-contributors',
     before: new Date('2017-09-21'),
     after: new Date(0)
@@ -77,17 +77,26 @@ test('Contributors before a fixed date remain static', t => {
 
 test('Queries without tokens get rejected', t => {
   return main.repoContributors({
-    user: 'RichardLitt',
+    user: 'mntnr',
     repo: 'name-your-contributors',
     before: new Date(),
     after: new Date(0)
   }).catch(error => t.is(error.message, 'Unauthorized'))
 })
 
-test('user repo names come back', async t => {
-  const repos = await main.userRepoNames({token, login: 'tgetgood'})
-
-  console.log(repos)
-
-  t.pass()
+test('All sorts of valid GitHub URLS', async t => {
+  /* eslint-disable */
+  // Need to test tabs...
+  const urls = [
+    'git@github.com:RichardLitt/name-your-contributors.git',
+    'git@github.com:RichardLitt/name-your-contributors\n',
+    '	https://github.com/RichardLitt/name-your-contributors ',
+    'https://github.com/RichardLitt/name-your-contributors	'
+  ]
+  /* eslint-enable */
+  for (let x of urls) {
+    let parse = main.parseGitURL(x)
+    t.is(parse[1], 'RichardLitt')
+    t.is(parse[2], 'name-your-contributors')
+  }
 })

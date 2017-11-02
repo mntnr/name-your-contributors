@@ -60,7 +60,6 @@ const handleOut = console.log
 
 const handleError = e => {
   console.error(e.stack)
-
 }
 
 const callWithDefaults = (f, opts) => {

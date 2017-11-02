@@ -1,7 +1,6 @@
 'use strict'
 
 const https = require('https')
-const fs = require('fs')
 
 /** Escape strings to prevent injection attacks. Other types aren't an issue. */
 const escapeArgValue = val => {
