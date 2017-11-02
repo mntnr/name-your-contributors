@@ -128,6 +128,10 @@ const continuationQuery = (id, parentType, childType, cursor, n, query) =>
 // Data Filtering (co-queries if you will)
 /// //
 
+// Yay globals. For one off script purposes this is fine, but if we're
+// interleaving async calls to the main functions this will go awry.
+let verboseCont = false
+
 /** Recursive fetcher keeps grabbing the next page from the API until there are
   * none left. Returns the aggregate result of all fetches.
   */
@@ -136,7 +140,7 @@ const fetchAll = async ({token, acc, data, type, key, count, query, name}) => {
     const next = await graphql.executequery({
       token,
       name,
-      verbose: true,
+      verbose: verboseCont,
       query: continuationQuery(
         data.id, type, key, data[key].pageInfo.endCursor, count, query)
     })
@@ -216,7 +220,8 @@ const depaginateAll = async (parent, {token, acc, type, key, query, name}) =>
       }))))
 
 /** Parse repository query result and filter for date range. */
-const cleanRepo = async (token, result, before, after) => {
+const cleanRepo = async (token, result, before, after, verbose) => {
+  verboseCont = verbose
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
 
@@ -366,7 +371,9 @@ const mergeRepoResults = repos =>
         return ret
       })
 
-const cleanOrgRepos = async (token, result, before, after) => {
+const cleanOrgRepos = async (token, result, before, after, verbose) => {
+  verboseCont = verbose
+
   const repos = await fetchAll({
     token,
     name: 'org repos cont',

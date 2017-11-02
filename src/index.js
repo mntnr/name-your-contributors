@@ -33,7 +33,7 @@ const parseGitURL = url => {
 
 const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
       .then(parseGitURL)
-      .then(x => {return {user: x[1], repo: x[2]}})
+      .then(x => { return {user: x[1], repo: x[2]} })
 
 //
 // CSV Output
@@ -80,7 +80,7 @@ const repoContributors = (
         if (dryRun) {
           return json
         } else {
-          return queries.cleanRepo(token, json.repository, before, after)
+          return queries.cleanRepo(token, json.repository, before, after, verbose)
         }
       })
 
@@ -102,7 +102,7 @@ const orgContributors = ({token, orgName, before, after, debug, dryRun, verbose}
         if (dryRun) {
           return data
         } else {
-          return queries.cleanOrgRepos(token, data, before, after)
+          return queries.cleanOrgRepos(token, data, before, after, verbose)
         }
       })
 
