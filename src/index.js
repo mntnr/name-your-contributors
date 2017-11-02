@@ -21,10 +21,10 @@ const shellOut = command =>
 
 const gitConfigCommand = 'git config --get remote.origin.url'
 
-const parseGitURL = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)\\n?$')
+const parseGitURL = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)$')
 
 const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
-      .then(x => parseGitURL.exec(x))
+      .then(x => parseGitURL.exec(x.trim()))
       .then(x => {
         let repo = x[2]
         if (repo.endsWith('.git')) {
