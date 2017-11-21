@@ -18,12 +18,14 @@ const userInfo = node('user')
       .addChild(node('name'))
       .addChild(node('url'))
 
+const reactorSubQ = node('nodes')
+      .addChild(node('id'))
+      .addChild(node('createdAt'))
+      .addChild(userInfo)
+
 const reactorQ = node('reactions', {first: 10})
       .addChild(pagination)
-      .addChild(node('nodes')
-                .addChild(node('id'))
-                .addChild(node('createdAt'))
-                .addChild(userInfo))
+      .addChild(reactorSubQ)
 
 const authoredQ = node('nodes')
       .addChild(node('id'))
@@ -315,35 +317,35 @@ const cleanRepo = async (token, result, before, after, verbose) => {
     acc: cc => cc.reactions.nodes,
     type: 'CommitComment',
     key: 'reactions',
-    query: reactorQ
+    query: reactorSubQ
   })).concat(await depaginateAll(issueComments, {
     token,
     name: 'issue comment reactions cont',
     acc: ic => ic.reactions.nodes,
     type: 'IssueComment',
     key: 'reactions',
-    query: reactorQ
+    query: reactorSubQ
   })).concat(await depaginateAll(prComments, {
     token,
     name: 'pr comment reactions cont',
     acc: prc => prc.reactions.nodes,
     type: 'PullRequestComment',
     key: 'reactions',
-    query: reactorQ
+    query: reactorSubQ
   })).concat(await depaginateAll(issues, {
     token,
     name: 'issue reactions cont',
     acc: is => is.reactions.nodes,
     type: 'Issue',
     key: 'reactions',
-    query: participantsQ
+    query: reactorSubQ
   })).concat(await depaginateAll(prs, {
     token,
     name: 'pullrequest reactions cont',
     acc: pr => pr.reactions.nodes,
     type: 'PullRequest',
     key: 'reactions',
-    query: participantsQ
+    query: reactorSubQ
   }))
 
   return {
