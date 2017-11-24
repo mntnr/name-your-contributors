@@ -55,7 +55,7 @@ const nyc = require('name-your-contributors')
 
 nyc.repoContributors({
 	token: process.env.GITHUB_TOKEN,
-	user: 'RichardLitt',
+	user: 'mntnr,
 	repo: 'name-your-contributors'
 	}).then(//do something with the results
 	)
@@ -75,9 +75,67 @@ nyc.orgContributors({
 $ npm install -g name-your-contributors
 
 $ export GITHUB_TOKEN={your-token}
-$ name-your-contributors -u RichardLitt -r name-your-contributors
+
+$ name-your-contributors -u mntnr -r name-your-contributors
 
 $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib.json
+```
+
+The output will be in the format:
+
+```sh
+$ name-your-contributors -u mntnr -r name-your-contributors --after 2017-11-10
+
+{
+  "commitAuthors": [],
+  "commitCommentators": [],
+  "prCreators": [],
+  "prCommentators": [
+	{
+	  "login": "RichardLitt",
+	  "name": "Richard Littauer",
+	  "url": "https://github.com/RichardLitt",
+	  "count": 3
+	},
+	{
+	  "login": "tgetgood",
+	  "name": "Thomas Getgood",
+	  "url": "https://github.com/tgetgood",
+	  "count": 2
+	}
+  ],
+  "issueCreators": [
+	{
+	  "login": "RichardLitt",
+	  "name": "Richard Littauer",
+	  "url": "https://github.com/RichardLitt",
+	  "count": 1
+	}
+  ],
+  "issueCommentators": [
+	{
+	  "login": "tgetgood",
+	  "name": "Thomas Getgood",
+	  "url": "https://github.com/tgetgood",
+	  "count": 1
+	},
+	{
+	  "login": "RichardLitt",
+	  "name": "Richard Littauer",
+	  "url": "https://github.com/RichardLitt",
+	  "count": 1
+	}
+  ],
+  "reactors": [
+	{
+	  "login": "patcon",
+	  "name": "Patrick Connolly",
+	  "url": "https://github.com/patcon",
+	  "count": 1
+	}
+  ],
+  "reviewers": []
+}
 ```
 
 ## API
