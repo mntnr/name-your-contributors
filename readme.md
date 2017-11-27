@@ -79,6 +79,57 @@ $ export GITHUB_TOKEN={your-token}
 $ name-your-contributors -u mntnr -r name-your-contributors
 
 $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib.json
+
+$ name-your-contributors --config config.json > combined-out.json
+```
+
+### Config File
+
+For batching convenience, Name Your Contributors takes a config file which
+specifies a token, a list of repos, and a list of orgs to grab. The
+`config.json.example` is an outline of this file format:
+
+```json
+{
+  "token": "123435abcdf",
+  "repos": [{
+	"login": "mntnr",
+	"repo": "name-your-contributors",
+	"before": "2017-11-30",
+	"after": "2017-06-01"
+  }, {
+	"login": "mntnr",
+	"repo": "whodidwhat"
+  }],
+  "orgs": [{
+	"login": "adventure-js",
+	"after": "2017-07-01"
+  }]
+}
+```
+
+A token passed in the config file will override any token present in the
+environment.
+
+The output when passed a config file is a mirror of the config file with the
+token removed and a `contributions` key added to each object, like so:
+
+```json
+{
+  "repos": [{
+	"login": "mntnr",
+	"repo": "name-your-contributors",
+	"before": "2017-11-30",
+	"after": "2017-06-01",
+	"contributions" : {
+	  "commitAuthors": [...],
+	  "commitCommentators: [...],
+	  ,,,
+	},
+	...
+  }],
+  "orgs": [...]
+}
 ```
 
 The output will be in the format:

@@ -16,6 +16,8 @@ const cli = meow([`
     -r, --repo   - Repository to search
     -t, --token  - GitHub auth token to use
     -u, --user   - User to which repository belongs
+    --config     - Operate from config file. In this mode only token, verbose, and
+                   debug flags apply.
 
   Authentication
     This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
@@ -25,6 +27,8 @@ const cli = meow([`
     $ name-your-contributors -r ipfs -u ipfs --after=2016-01-15T00:20:24Z --before=2016-01-20T00:20:24Z
 
     $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib-2017.json
+
+    $ name-your-contributors --config config.json > combined-out.json
 `], {
   alias: {
     a: 'after',
@@ -43,7 +47,7 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
 const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
 
-if (!token) {
+if (!token && !cli.flags.config) {
   console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
   process.exit(1)
 }
@@ -76,7 +80,17 @@ const callWithDefaults = (f, opts) => {
 const fetchRepo = (user, repo) =>
       callWithDefaults(main.repoContributors, {user, repo})
 
-if (cli.flags.o) {
+if (cli.flags.config) {
+  main.fromConfig({
+    file: cli.flags.config,
+    token,
+    verbose: cli.flags.v,
+    debug: cli.flags.debug,
+    dryRun: cli.flags.dryRun
+  }).then(x => JSON.stringify(x, null, 2))
+  .then(handleOut)
+  .catch(handleError)
+} else if (cli.flags.o) {
   callWithDefaults(main.orgContributors, {orgName: cli.flags.o})
 } else if (cli.flags.u && cli.flags.r) {
   fetchRepo(cli.flags.u, cli.flags.r)

@@ -1,0 +1,16 @@
+{
+  "token": "123435abcdf",
+  "repos": [{
+    "login": "mntnr",
+    "repo": "name-your-contributors",
+    "before": "2017-11-30",
+    "after": "2017-06-01"
+  }, {
+    "login": "mntnr",
+    "repo": "whodidwhat"
+  }],
+  "orgs": [{
+    "login": "adventure-js",
+    "after": "2017-07-01"
+  }]
+}
