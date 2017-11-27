@@ -11,12 +11,12 @@ const cli = meow([`
   Options
     -a, --after  - Get contributions after date
     -b, --before - Get contributions before data
-    -c, --csv    - Output data in CSV format
+    --csv        - Output data in CSV format
     -o, --org    - Search all repos within this organisation
     -r, --repo   - Repository to search
     -t, --token  - GitHub auth token to use
     -u, --user   - User to which repository belongs
-    --config     - Operate from config file. In this mode only token, verbose, and
+    -c, --config - Operate from config file. In this mode only token, verbose, and
                    debug flags apply.
 
   Authentication
@@ -33,7 +33,7 @@ const cli = meow([`
   alias: {
     a: 'after',
     b: 'before',
-    c: 'csv',
+    c: 'config',
     r: 'repo',
     t: 'token',
     o: 'org',
@@ -47,7 +47,7 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
 const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
 
-if (!token && !cli.flags.config) {
+if (!token && !cli.flags.c) {
   console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
   process.exit(1)
 }
@@ -80,9 +80,9 @@ const callWithDefaults = (f, opts) => {
 const fetchRepo = (user, repo) =>
       callWithDefaults(main.repoContributors, {user, repo})
 
-if (cli.flags.config) {
+if (cli.flags.c) {
   main.fromConfig({
-    file: cli.flags.config,
+    file: cli.flags.c,
     token,
     verbose: cli.flags.v,
     debug: cli.flags.debug,
