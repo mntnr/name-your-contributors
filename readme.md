@@ -55,7 +55,7 @@ const nyc = require('name-your-contributors')
 
 nyc.repoContributors({
 	token: process.env.GITHUB_TOKEN,
-	user: 'mntnr,
+	user: 'mntnr',
 	repo: 'name-your-contributors'
 	}).then(//do something with the results
 	)
