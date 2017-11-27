@@ -2,25 +2,7 @@
 'use strict'
 
 const meow = require('meow')
-const csv = require('csv-writer').createArrayCsvStringifier
 const main = require('./index')
-
-const flatten = json => {
-  const prs = json.prCreators.map(x => ['pr creator'].concat(x))
-  const prcs = json.prCommentators.map(x => ['pr commentator'].concat(x))
-  const is = json.issueCreators.map(x => ['issue creator'].concat(x))
-  const iscs = json.issueCommentators.map(x => ['issue commentator'].concat(x))
-
-  return prs.concat(prcs).concat(is).concat(iscs)
-}
-
-const toCSV = json => {
-  const writer = csv({
-    header: ['TYPE', 'LOGIN', 'NAME']
-  })
-  return writer.getHeaderString() +
-    writer.stringifyRecords(flatten(json))
-}
 
 const cli = meow([`
   Usage
@@ -50,7 +32,9 @@ const cli = meow([`
     c: 'csv',
     r: 'repo',
     t: 'token',
-    u: 'user'
+    o: 'org',
+    u: 'user',
+    v: 'verbose'
   }
 })
 
@@ -59,37 +43,45 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
 const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
 
-const debugMode = cli.flags.debug
-
-if (cli.flags.o && token) {
-  main.orgContributors({
-    debug: debugMode,
-    token: token,
-    orgName: cli.flags.o,
-    before: before,
-    after: after
-  }).then(json => JSON.stringify(json, null, 2))
-    .then(console.log)
-    .catch(e => console.error(e.message))
-} else if (cli.flags.u && cli.flags.r && token) {
-  main.repoContributors({
-    debug: debugMode,
-    token: token,
-    user: cli.flags.u,
-    repo: cli.flags.r,
-    before: before,
-    after: after
-  }).then(x => {
-    if (cli.flags.csv) {
-      return toCSV(x)
-    } else {
-      return JSON.stringify(x, null, 2)
-    }
-  }).then(console.log)
-    .catch(e => {
-      console.error(e.stack)
-    })
-} else {
-  console.error('You must currently specify both a user and a repo name. And provide a token.')
+if (!token) {
+  console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
   process.exit(1)
+}
+
+const formatReturn = x => {
+  if (cli.flags.csv) {
+    return main.toCSV(x)
+  } else {
+    return JSON.stringify(x, null, 2)
+  }
+}
+
+const handleOut = console.log
+
+const handleError = e => {
+  console.error(e.stack)
+}
+
+const callWithDefaults = (f, opts) => {
+  opts.before = before
+  opts.after = after
+  opts.token = token
+  opts.debug = cli.flags.debug
+  opts.dryRun = cli.flags.dryRun
+  opts.verbose = cli.flags.v
+
+  return f(opts).then(formatReturn).then(handleOut).catch(handleError)
+}
+
+const fetchRepo = (user, repo) =>
+      callWithDefaults(main.repoContributors, {user, repo})
+
+if (cli.flags.o) {
+  callWithDefaults(main.orgContributors, {orgName: cli.flags.o})
+} else if (cli.flags.u && cli.flags.r) {
+  fetchRepo(cli.flags.u, cli.flags.r)
+} else if (cli.flags.r) {
+  main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
+} else {
+  main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
 }
