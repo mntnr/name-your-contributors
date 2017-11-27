@@ -123,7 +123,7 @@ token removed and a `contributions` key added to each object, like so:
 	"after": "2017-06-01",
 	"contributions" : {
 	  "commitAuthors": [...],
-	  "commitCommentators: [...],
+	  "commitCommentators": [...],
 	  ,,,
 	},
 	...
