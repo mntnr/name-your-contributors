@@ -23,7 +23,7 @@ const reactorSubQ = node('nodes')
       .addChild(node('createdAt'))
       .addChild(userInfo)
 
-const reactorQ = node('reactions', {first: 10})
+const reactorQ = node('reactions', {first: 1})
       .addChild(pagination)
       .addChild(reactorSubQ)
 
@@ -51,38 +51,44 @@ const commitQ = (before, after) => {
               .addChild(node('id'))
               .addChild(node('... on Commit')
                         .addChild(
-                          node('history', {first: 100, since: a, until: b})
+                          node('history', {first: 1, since: a, until: b})
                             .addChild(pagination)
                             .addChild(commitHistoryQ))))
 }
 
-const refsQ = (before, after) => node('refs', {first: 100, refPrefix: 'refs/heads/'})
-      .addChild(pagination)
+const refsQ = (before, after, top) =>
+      node('refs', {
+        refPrefix: 'refs/heads/',
+        first: top === true ? 100 : 1
+      }).addChild(pagination)
       .addChild(commitQ(before, after))
 
 const authoredWithReactionsQ = authoredQ
       .addChild(reactorQ)
 
-const reviewQ = node('reviews', {first: 20})
+const reviewQ = node('reviews', {first: 1})
       .addChild(pagination)
       .addChild(authoredQ)
 
 const participantsQ = authoredWithReactionsQ
-      .addChild(node('comments', {first: 50})
+      .addChild(node('comments', {first: 1})
                 .addChild(pagination)
                 .addChild(authoredWithReactionsQ))
 
 const prsContQ = participantsQ.addChild(reviewQ)
 
-const prsQ = node('pullRequests', {first: 50})
+const prsQ = top =>
+      node('pullRequests', {first: top === true ? 100 : 1})
       .addChild(pagination)
       .addChild(prsContQ)
 
-const issuesQ = node('issues', {first: 50})
+const issuesQ = top =>
+      node('issues', {first: top === true ? 100 : 1})
       .addChild(pagination)
       .addChild(participantsQ)
 
-const commitCommentQ = node('commitComments', {first: 50})
+const commitCommentQ = top =>
+      node('commitComments', {first: top === true ? 100 : 1})
       .addChild(pagination)
       .addChild(authoredWithReactionsQ)
 
@@ -90,41 +96,53 @@ const commitCommentQ = node('commitComments', {first: 50})
 const repository = (repoName, ownerName, before, after) =>
       node('repository', {name: repoName, owner: ownerName})
       .addChild(node('id'))
-      .addChild(commitCommentQ)
-      .addChild(refsQ(before, after))
-      .addChild(prsQ)
-      .addChild(issuesQ)
+      .addChild(commitCommentQ(true))
+      .addChild(refsQ(before, after, true))
+      .addChild(prsQ(true))
+      .addChild(issuesQ(true))
 
 const repositoryCont = (before, after) =>
       node('nodes')
       .addChild(node('id'))
-      .addChild(commitCommentQ)
-      .addChild(refsQ(before, after))
-      .addChild(prsQ)
-      .addChild(issuesQ)
+      .addChild(commitCommentQ(false))
+      .addChild(refsQ(before, after, false))
+      .addChild(prsQ(false))
+      .addChild(issuesQ(false))
 
-const repositories = (before, after) =>
-      node('repositories', {first: 5})
+const repositories = (before, after, top) =>
+      node('repositories', {first: top === true ? 100 : 1})
       .addChild(pagination)
       .addChild(repositoryCont(before, after))
 
 const orgRepos = (name, before, after) =>
       node('organization', {login: name})
       .addChild(node('id'))
-      .addChild(repositories(before, after))
+      .addChild(repositories(before, after, true))
 
 const userRepos = (login, before, after) =>
       node('user', {login})
       .addChild(node('id'))
       .addChild(repositories(before, after))
 
-const continuationQuery = (id, parentType, childType, cursor, n, query) =>
-      node('node', {id})
-      .addChild(node('id'))
-      .addChild(node(`... on ${parentType}`)
-                .addChild(node(childType, {after: cursor, first: n})
-                          .addChild(pagination)
-                          .addChild(query)))
+const continuationQuery =
+      ({id, parentType, childType, cursor, count, query, before, after}) => {
+        const a = after && after.toISOString()
+        const b = before && before.toISOString()
+        const args = {after: cursor, first: count}
+        if (childType === 'history') {
+          args.since = a
+          args.until = b
+        } else if (childType === 'refs') {
+          args.refPrefix = 'refs/heads/'
+        }
+
+        return node('node', {id})
+          .addChild(node('id'))
+          .addChild(node(`... on ${parentType}`)
+                    .addChild(node(childType, args)
+                              .addChild(pagination)
+                              .addChild(query)))
+      }
 
 /// //
 // Data Filtering (co-queries if you will)
@@ -137,30 +155,41 @@ let verboseCont = false
 /** Recursive fetcher keeps grabbing the next page from the API until there are
   * none left. Returns the aggregate result of all fetches.
   */
-const fetchAll = async ({token, acc, data, type, key, count, query, name}) => {
-  if (data[key].pageInfo.hasNextPage) {
-    const next = await graphql.executequery({
-      token,
-      name,
-      verbose: verboseCont,
-      query: continuationQuery(
-        data.id, type, key, data[key].pageInfo.endCursor, count, query)
-    })
+const fetchAll =
+      async ({token, acc, data, type, key, count, query, name, before, after}) => {
+        if (data[key].pageInfo.hasNextPage) {
+          const next = await graphql.executequery({
+            token,
+            name,
+            verbose: verboseCont,
+            query: continuationQuery({
+              id: data.id,
+              parentType: type,
+              childType: key,
+              cursor: data[key].pageInfo.endCursor,
+              count,
+              query,
+              before,
+              after
+            })
+          })
 
-    return fetchAll({
-      token,
-      name,
-      acc: acc.concat(next.node[key].nodes),
-      data: next.node,
-      type,
-      key,
-      count,
-      query
-    })
-  } else {
-    return acc
-  }
-}
+          return fetchAll({
+            token,
+            name,
+            acc: acc.concat(next.node[key].nodes),
+            data: next.node,
+            type,
+            key,
+            count,
+            query,
+            before,
+            after
+          })
+        } else {
+          return acc
+        }
+      }
 
 /** Returns a function that when given an array of objects with createAt keys,
   * returns an array containing only those objects created between before and
@@ -209,7 +238,8 @@ const mergeContributions = xs => {
   return Array.from(m.values())
 }
 
-const depaginateAll = async (parent, {token, acc, type, key, query, name}) =>
+const depaginateAll =
+      async (parent, {token, acc, type, key, query, name, before, after}) =>
       flatten(await Promise.all(parent.map(x => fetchAll({
         name,
         token,
@@ -218,14 +248,17 @@ const depaginateAll = async (parent, {token, acc, type, key, query, name}) =>
         query,
         acc: acc(x),
         data: x,
-        count: 50
+        count: 100,
+        before,
+        after
       }))))
 
 const byCount = (a, b) => b.count - a.count
 
 /** Parse repository query result and filter for date range. */
 const cleanRepo = async (token, result, before, after, verbose) => {
-  verboseCont = verbose
+  verboseCont = verboseCont || verbose
+
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
         .sort(byCount)
@@ -249,7 +282,9 @@ const cleanRepo = async (token, result, before, after, verbose) => {
     acc: ref => ref.history.nodes,
     type: 'Commit',
     key: 'history',
-    query: commitHistoryQ
+    query: commitHistoryQ,
+    before,
+    after
   })
 
   const commitAuthors = Array.from(commits).map(x => x.author)
@@ -284,7 +319,7 @@ const cleanRepo = async (token, result, before, after, verbose) => {
     type: 'Repository',
     key: 'commitComments',
     count: 100,
-    query: commitCommentQ
+    query: authoredWithReactionsQ
   })
 
   const reviews = await depaginateAll(prs, {
@@ -378,7 +413,7 @@ const mergeRepoResults = repos =>
       })
 
 const cleanOrgRepos = async (token, result, before, after, verbose) => {
-  verboseCont = verbose
+  verboseCont = verboseCont || verbose
 
   const repos = await fetchAll({
     token,
@@ -387,12 +422,13 @@ const cleanOrgRepos = async (token, result, before, after, verbose) => {
     data: result.organization,
     type: 'Organization',
     key: 'repositories',
-    count: 20,
+    count: 100,
     query: repositoryCont(before, after)
   })
 
   return mergeRepoResults(
-    await Promise.all(repos.map(repo => cleanRepo(token, repo, before, after))))
+    await Promise.all(repos.map(repo =>
+                                cleanRepo(token, repo, before, after, verbose))))
 }
 
 const cleanWhoAmI = x => x.viewer.login
@@ -411,6 +447,5 @@ module.exports = {
   mergeArrays,
   mergeRepoResults,
   authoredQ,
-  userRepos,
-  continuationQuery
+  userRepos
 }
