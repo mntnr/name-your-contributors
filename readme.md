@@ -235,6 +235,22 @@ Type: `string`
 
 Only traverse the given repository.
 
+## Development
+
+There are several extra flags that are useful for development and diagnosing
+issues:
+
+`-v, --verbose` prints out each query that is sent to the api along with its
+cost and the quota remaining after it is run.
+
+`--debug` prints out each query sent to the server and the raw response. This is
+extremely verbose.
+
+`--dry-run` prints the cost of the first query that would have been run *without
+running it*. Note that since the query isn't executed, follow up queries aren't
+possible. when used with the `-c, --config` option, dry runs the first query for
+each entry of the config file.
+
 ## License
 
 MIT © [Richard Littauer](http://burntfen.com)

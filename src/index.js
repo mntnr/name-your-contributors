@@ -57,9 +57,9 @@ const toCSV = json => {
     writer.stringifyRecords(flatten(json))
 }
 
-const verifyResultHasKey = (key, query) =>
+const verifyResultHasKey = (key, query, dryRun) =>
       x => {
-        if (x[key] == null) {
+        if (!dryRun && x[key] == null) {
           throw new Error(`Bad query: ${key} '${query}' does not exist`)
         } else {
           return x
@@ -89,7 +89,7 @@ const repoContributors =
         verbose,
         name: `repoContributors: ${user}/${repo}`,
         query: queries.repository(repo, user, before, after)
-      }).then(verifyResultHasKey('repository', user + '/' + repo))
+      }).then(verifyResultHasKey('repository', user + '/' + repo, dryRun))
       .then(json => {
         if (dryRun) {
           return json
@@ -112,7 +112,7 @@ const orgContributors = ({token, orgName, before, after, debug, dryRun, verbose}
         verbose,
         name: `orgContributors: ${orgName}`,
         query: queries.orgRepos(orgName, before, after)
-      }).then(verifyResultHasKey('organization', orgName))
+      }).then(verifyResultHasKey('organization', orgName, dryRun))
       .then(data => {
         if (dryRun) {
           return data
