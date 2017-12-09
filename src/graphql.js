@@ -44,6 +44,9 @@ const childrenString = children => {
 }
 
 itemToString = ({name, args, children}) => {
+  if (args == null) {
+    throw new Error(`No args passed to ${name}`)
+  }
   return name + argsString(args) + childrenString(children)
 }
 

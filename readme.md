@@ -30,6 +30,14 @@ $ export GITHUB_TOKEN=ab34e...
 You can also set the var automatically in every session by adding the above line
 to your `.bashrc` file in your home directory.
 
+The cost of querying a repo is approximately the number of PRs + the number of
+issues + the number of comments with reactions (if querying reactions) + the
+number of commits / 100 (if querying commit log).
+
+So in the simplest case it's simply the total number of issues and PRs in the
+repos being queried.
+
+
 #### Caveats
 
 GitHub regulates API traffic by a credit system. The limits are quite high; it's
