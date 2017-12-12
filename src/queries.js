@@ -93,36 +93,43 @@ const commitCommentQ = top =>
       .addChild(authoredWithReactionsQ)
 
 /** Returns a query to retrieve all contributors to a repo */
-const repository = (repoName, ownerName, before, after) =>
-      node('repository', {name: repoName, owner: ownerName})
+const repository = (repoName, ownerName, before, after, commits) => {
+  let q = node('repository', {name: repoName, owner: ownerName})
       .addChild(node('id'))
-      .addChild(commitCommentQ(true))
-      .addChild(refsQ(before, after, true))
       .addChild(prsQ(true))
       .addChild(issuesQ(true))
 
-const repositoryCont = (before, after) =>
-      node('nodes')
+  if (commits) {
+    q = q.addChild(commitCommentQ(true))
+      .addChild(refsQ(before, after, true))
+  }
+
+  return q
+}
+
+const repositoryCont = (before, after, commits) => {
+  let q = node('nodes')
       .addChild(node('id'))
-      .addChild(commitCommentQ(false))
-      .addChild(refsQ(before, after, false))
       .addChild(prsQ(false))
       .addChild(issuesQ(false))
 
-const repositories = (before, after, top) =>
+  if (commits) {
+    q = q.addChild(commitCommentQ(false))
+      .addChild(refsQ(before, after, false))
+  }
+
+  return q
+}
+
+const repositories = (before, after, top, commits) =>
       node('repositories', {first: top === true ? 100 : 1})
       .addChild(pagination)
-      .addChild(repositoryCont(before, after))
+      .addChild(repositoryCont(before, after, commits))
 
-const orgRepos = (name, before, after) =>
+const orgRepos = (name, before, after, commits) =>
       node('organization', {login: name})
       .addChild(node('id'))
-      .addChild(repositories(before, after, true))
-
-const userRepos = (login, before, after) =>
-      node('user', {login})
-      .addChild(node('id'))
-      .addChild(repositories(before, after))
+      .addChild(repositories(before, after, true, commits))
 
 const continuationQuery =
       ({id, parentType, childType, cursor, count, query, before, after}) => {
@@ -256,38 +263,46 @@ const depaginateAll =
 const byCount = (a, b) => b.count - a.count
 
 /** Parse repository query result and filter for date range. */
-const cleanRepo = async (token, result, before, after, verbose) => {
+const cleanRepo = async ({
+  token, result, before, after, verbose, commits, reactions
+}) => {
   verboseCont = verboseCont || verbose
 
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
         .sort(byCount)
 
-  const branches = await fetchAll({
-    token,
-    name: 'refs cont',
-    acc: result.refs.nodes,
-    data: result,
-    type: 'Repository',
-    key: 'refs',
-    count: 100,
-    query: commitQ(before, after)
-  })
+  let branches = []
+  if (commits) {
+    branches = await fetchAll({
+      token,
+      name: 'refs cont',
+      acc: result.refs.nodes,
+      data: result,
+      type: 'Repository',
+      key: 'refs',
+      count: 100,
+      query: commitQ(before, after)
+    })
+    }
 
   const targets = Array.from(branches).map(b => b.target)
 
-  const commits = await depaginateAll(targets, {
-    token,
-    name: 'commits cont',
-    acc: ref => ref.history.nodes,
-    type: 'Commit',
-    key: 'history',
-    query: commitHistoryQ,
-    before,
-    after
-  })
+  let commitsCont = []
+  if (commits) {
+    commitsCont = await depaginateAll(targets, {
+      token,
+      name: 'commits cont',
+      acc: ref => ref.history.nodes,
+      type: 'Commit',
+      key: 'history',
+      query: commitHistoryQ,
+      before,
+      after
+    })
+  }
 
-  const commitAuthors = Array.from(commits).map(x => x.author)
+  const commitAuthors = Array.from(commitsCont).map(x => x.author)
 
   const prs = await fetchAll({
     token,
@@ -311,16 +326,19 @@ const cleanRepo = async (token, result, before, after, verbose) => {
     query: participantsQ
   })
 
-  const commitComments = await fetchAll({
-    token,
-    name: 'commit comments cont',
-    acc: result.commitComments.nodes,
-    data: result,
-    type: 'Repository',
-    key: 'commitComments',
-    count: 100,
-    query: authoredWithReactionsQ
-  })
+  let commitComments = []
+  if (commits) {
+    commitComments = await fetchAll({
+      token,
+      name: 'commit comments cont',
+      acc: result.commitComments.nodes,
+      data: result,
+      type: 'Repository',
+      key: 'commitComments',
+      count: 100,
+      query: authoredWithReactionsQ
+    })
+  }
 
   const reviews = await depaginateAll(prs, {
     token,
@@ -349,54 +367,66 @@ const cleanRepo = async (token, result, before, after, verbose) => {
     query: authoredQ.addChild(reactorQ)
   })
 
-  const reactions = Array.from(await depaginateAll(commitComments, {
-    token,
-    name: 'reactions cont',
-    acc: cc => cc.reactions.nodes,
-    type: 'CommitComment',
-    key: 'reactions',
-    query: reactorSubQ
-  })).concat(await depaginateAll(issueComments, {
-    token,
-    name: 'issue comment reactions cont',
-    acc: ic => ic.reactions.nodes,
-    type: 'IssueComment',
-    key: 'reactions',
-    query: reactorSubQ
-  })).concat(await depaginateAll(prComments, {
-    token,
-    name: 'pr comment reactions cont',
-    acc: prc => prc.reactions.nodes,
-    type: 'PullRequestComment',
-    key: 'reactions',
-    query: reactorSubQ
-  })).concat(await depaginateAll(issues, {
-    token,
-    name: 'issue reactions cont',
-    acc: is => is.reactions.nodes,
-    type: 'Issue',
-    key: 'reactions',
-    query: reactorSubQ
-  })).concat(await depaginateAll(prs, {
-    token,
-    name: 'pullrequest reactions cont',
-    acc: pr => pr.reactions.nodes,
-    type: 'PullRequest',
-    key: 'reactions',
-    query: reactorSubQ
-  }))
+  let reactionsCont = []
+  if (reactions) {
+    reactionsCont = Array.from(await depaginateAll(commitComments, {
+      token,
+      name: 'reactions cont',
+      acc: cc => cc.reactions.nodes,
+      type: 'CommitComment',
+      key: 'reactions',
+      query: reactorSubQ
+    })).concat(await depaginateAll(issueComments, {
+      token,
+      name: 'issue comment reactions cont',
+      acc: ic => ic.reactions.nodes,
+      type: 'IssueComment',
+      key: 'reactions',
+      query: reactorSubQ
+    })).concat(await depaginateAll(prComments, {
+      token,
+      name: 'pr comment reactions cont',
+      acc: prc => prc.reactions.nodes,
+      type: 'PullRequestComment',
+      key: 'reactions',
+      query: reactorSubQ
+    })).concat(await depaginateAll(issues, {
+      token,
+      name: 'issue reactions cont',
+      acc: is => is.reactions.nodes,
+      type: 'Issue',
+      key: 'reactions',
+      query: reactorSubQ
+    })).concat(await depaginateAll(prs, {
+      token,
+      name: 'pullrequest reactions cont',
+      acc: pr => pr.reactions.nodes,
+      type: 'PullRequest',
+      key: 'reactions',
+      query: reactorSubQ
+    }))
+  }
 
-  return {
-    commitAuthors: mergeContributions(users(commitAuthors))
-      .sort(byCount),
-    commitCommentators: process(commitComments),
+  const processed = {
     prCreators: process(prs),
     prCommentators: process(prComments),
     issueCreators: process(issues),
     issueCommentators: process(issueComments),
-    reactors: process(reactions),
     reviewers: process(reviews)
   }
+
+  if (reactions) {
+    processed.reactors = process(reactionsCont)
+  }
+
+  if (commits) {
+    processed.commitAuthors = mergeContributions(users(commitAuthors))
+      .sort(byCount)
+
+    processed.commitCommentators = process(commitComments)
+  }
+
+  return processed
 }
 
 const mergeArrays = (a, b) =>
@@ -412,7 +442,9 @@ const mergeRepoResults = repos =>
         return ret
       })
 
-const cleanOrgRepos = async (token, result, before, after, verbose) => {
+const cleanOrgRepos = async ({
+  token, result, before, after, verbose, commits, reactions
+}) => {
   verboseCont = verboseCont || verbose
 
   const repos = await fetchAll({
@@ -423,12 +455,22 @@ const cleanOrgRepos = async (token, result, before, after, verbose) => {
     type: 'Organization',
     key: 'repositories',
     count: 100,
-    query: repositoryCont(before, after)
+    query: repositoryCont(before, after, commits)
   })
 
   return mergeRepoResults(
-    await Promise.all(repos.map(repo =>
-                                cleanRepo(token, repo, before, after, verbose))))
+    await Promise.all(repos.map(repo => {
+      return cleanRepo({
+        token,
+        result: repo,
+        commits,
+        reactions,
+        before,
+        after,
+        verbose
+      })
+    }))
+  )
 }
 
 const cleanWhoAmI = x => x.viewer.login
@@ -446,6 +488,5 @@ module.exports = {
   mergeContributions,
   mergeArrays,
   mergeRepoResults,
-  authoredQ,
-  userRepos
+  authoredQ
 }
