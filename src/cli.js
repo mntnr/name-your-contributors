@@ -65,8 +65,8 @@ const defaultOpts = opts => {
   opts.debug = cli.flags.debug
   opts.dryRun = cli.flags.dryRun
   opts.verbose = cli.flags.v
-  opts.commits = cli.flags.commits
-  opts.reactions = !cli.flags.localDir && cli.flags.reactions
+  opts.commits = !cli.flags.localDir && cli.flags.commits
+  opts.reactions = cli.flags.reactions
 
   return opts
 }

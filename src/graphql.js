@@ -88,6 +88,7 @@ const formatQuery = item => '{"query": ' +
 
 // Global debug mode.
 let debugMode = false
+let reqCounter = 1
 
 /**
   * Returns a promise which will yeild a query result.
@@ -131,7 +132,8 @@ const executequery = ({token, query, debug, dryRun, verbose, name}) => {
                             JSON.stringify(json.data, null, 2))
               }
               if (verbose) {
-                console.log('Cost of[' + name + ']: ' +
+                console.log('Cost of[' + name + ']: (' +
+                            '#' + reqCounter++ + ') ' +
                             JSON.stringify(json.data.rateLimit))
               }
 
