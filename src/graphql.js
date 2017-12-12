@@ -78,7 +78,7 @@ const queryNode = (name, args = {}, children = []) => {
   */
 const queryCost = (item, dryRun) => '{"query": ' +
       JSON.stringify(
-        `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining}\n` +
+        `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining, resetAt}\n` +
           item.toString() + '}') + '}'
 
 /** Converts a queryNode object into a valid graphql query string according to
@@ -89,16 +89,11 @@ const formatQuery = item => '{"query": ' +
 // Global debug mode.
 let debugMode = false
 
-/**
-  * Returns a promise which will yeild a query result.
-  * @param {string}    token   - Github auth token.
-  * @param {queryNode} query   - The query to execute.
-  * @param {string}    name    - Name of this query. For debugging only.
-  * @param {bool}      verbose - Enable verbose logging.
-  * @param {bool}      debug   - Debug mode: VERY verbose logging.
-  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
+/** Inner query executor.
+
+    Same params and output as executequery
   */
-const executequery = ({token, query, debug, dryRun, verbose, name}) => {
+const executequeryRaw = ({token, query, debug, dryRun, verbose, name}) => {
   if (debug) {
     debugMode = true
   }
@@ -161,6 +156,67 @@ const executequery = ({token, query, debug, dryRun, verbose, name}) => {
     req.write(runQ)
     req.end()
   })
+}
+
+// Global connection
+let running = 0
+let lastMinute = 0
+
+// Warning about rate throttling
+let warned = false
+
+// Rate limit parameters
+// We actually wait a minute after the request comes back before allowing the
+// next one to run
+const maxConnections = 20
+const maxPerMinute = 100
+
+const allocate = (args, verbose, debug) => {
+  if (debug) {
+    if (running > 0) {
+      console.log(`Running: ${running}, lastMinute: ${lastMinute}`)
+    }
+  }
+  return new Promise((resolve, reject) => {
+    if (running < maxConnections && lastMinute < maxPerMinute) {
+      running++
+      lastMinute++
+      resolve(executequeryRaw(args))
+    } else {
+      if (!warned && lastMinute >= maxPerMinute) {
+        warned = true
+        console.log('Warning!!! Rate throttling has taken effect. This query might take awhile; go grab some coffee.')
+      }
+      if (verbose && !debug && running > 0) {
+        console.log(`Throttled!! Running: ${running}, lastMinute: ${lastMinute}`)
+      }
+      setTimeout(() => resolve(allocate(args)), 1000)
+    }
+  })
+}
+
+const finished = () => {
+  running--
+}
+
+const free = res => {
+  setTimeout(() => lastMinute--, 60000)
+  res.then(finished).catch(finished)
+}
+
+/**
+  * Returns a promise which will yeild a query result.
+  * @param {string}    token   - Github auth token.
+  * @param {queryNode} query   - The query to execute.
+  * @param {string}    name    - Name of this query. For debugging only.
+  * @param {bool}      verbose - Enable verbose logging.
+  * @param {bool}      debug   - Debug mode: VERY verbose logging.
+  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
+  */
+const executequery = args => {
+  const response = allocate(args, args.verbose, args.debug)
+  free(response)
+  return response
 }
 
 module.exports = {
