@@ -58,6 +58,19 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
 const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
 
+const defaultOpts = opts => {
+  opts.before = before
+  opts.after = after
+  opts.token = token
+  opts.debug = cli.flags.debug
+  opts.dryRun = cli.flags.dryRun
+  opts.verbose = cli.flags.v
+  opts.commits = cli.flags.commits
+  opts.reactions = !cli.flags.localDir && cli.flags.reactions
+
+  return opts
+}
+
 if (!token && !cli.flags.c) {
   console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
   process.exit(1)
@@ -77,32 +90,20 @@ const handleError = e => {
   console.error(e.stack)
 }
 
-const callWithDefaults = (f, opts) => {
-  opts.before = before
-  opts.after = after
-  opts.token = token
-  opts.debug = cli.flags.debug
-  opts.dryRun = cli.flags.dryRun
-  opts.verbose = cli.flags.v
-
-  return f(opts).then(formatReturn).then(handleOut).catch(handleError)
-}
+const handle = (f, opts) =>
+     f(opts).then(formatReturn).then(handleOut).catch(handleError)
 
 const fetchRepo = (user, repo) =>
-      callWithDefaults(main.repoContributors, {user, repo})
+      handle(main.repoContributors, defaultOpts({user, repo}))
 
 if (cli.flags.c) {
-  main.fromConfig({
-    file: cli.flags.c,
-    token,
-    verbose: cli.flags.v,
-    debug: cli.flags.debug,
-    dryRun: cli.flags.dryRun
-  }).then(x => JSON.stringify(x, null, 2))
-  .then(handleOut)
-  .catch(handleError)
+  const opts = defaultOpts({file: cli.flags.c})
+  main.fromConfig(opts)
+    .then(x => JSON.stringify(x, null, 2))
+    .then(handleOut)
+    .catch(handleError)
 } else if (cli.flags.o) {
-  callWithDefaults(main.orgContributors, {orgName: cli.flags.o})
+  handle(main.orgContributors, defaultOpts({orgName: cli.flags.o}))
 } else if (cli.flags.u && cli.flags.r) {
   fetchRepo(cli.flags.u, cli.flags.r)
 } else if (cli.flags.r) {
