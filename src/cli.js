@@ -9,15 +9,26 @@ const cli = meow([`
     $ name-your-contributors <input> [opts]
 
   Options
-    -a, --after  - Get contributions after date
-    -b, --before - Get contributions before data
-    --csv        - Output data in CSV format
-    -o, --org    - Search all repos within this organisation
-    -r, --repo   - Repository to search
-    -t, --token  - GitHub auth token to use
-    -u, --user   - User to which repository belongs
-    -c, --config - Operate from config file. In this mode only token, verbose, and
-                   debug flags apply.
+    -t, --token   - GitHub auth token to use
+    -a, --after   - Get contributions after date
+    -b, --before  - Get contributions before data
+
+    -o, --org     - Search all repos within this organisation
+    -r, --repo    - Repository to search
+    -u, --user    - User to which repository belongs
+    -c, --config  - Operate from config file. In this mode only token, verbose, and
+                    debug flags apply.
+
+    --csv         - Output data in CSV format
+
+    --commits     - Get commit authors and comments from GitHub
+    --local-dir   - If specified, this script will look for repos being queried in
+                    the provided dir and read the commit log from them directly.
+    --reactions   - Query reactions of comments as well.
+
+    -v, --verbose - Enable verbose logging
+    --debug       - Enable extremely verbose logging
+    --dry-run     - Check the cost of the query without executing it.
 
   Authentication
     This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
