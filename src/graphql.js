@@ -168,10 +168,8 @@ let lastMinute = 0
 let warned = false
 
 // Rate limit parameters
-// We actually wait a minute after the request comes back before allowing the
-// next one to run
-const maxConnections = 20
-const maxPerMinute = 100
+const maxConnections = 1
+const maxPerMinute = 300
 
 const allocate = (args, verbose, debug) => {
   if (debug) {
@@ -189,10 +187,10 @@ const allocate = (args, verbose, debug) => {
         warned = true
         console.log('Warning!!! Rate throttling has taken effect. This query might take awhile; go grab some coffee.')
       }
-      if (verbose && !debug && running > 0) {
+      if (verbose && !debug && lastMinute >= maxPerMinute) {
         console.log(`Throttled!! Running: ${running}, lastMinute: ${lastMinute}`)
       }
-      setTimeout(() => resolve(allocate(args)), 1000)
+      setTimeout(() => resolve(allocate(args, verbose, debug)), 1000)
     }
   })
 }
