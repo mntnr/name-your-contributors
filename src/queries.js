@@ -367,7 +367,7 @@ const cleanRepo = async (token, result, before, after, verbose) => {
     token,
     name: 'pr comment reactions cont',
     acc: prc => prc.reactions.nodes,
-    type: 'PullRequestComment',
+    type: 'IssueComment',
     key: 'reactions',
     query: reactorSubQ
   })).concat(await depaginateAll(issues, {
