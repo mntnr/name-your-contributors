@@ -87,7 +87,7 @@ const repoContributors = ({
   debug,
   dryRun,
   verbose,
-  name: `repoContributors: ${user}/${repo}`,
+  name: `${user}/${repo}`,
   query: queries.repository(repo, user, before, after, commits)
 }).then(verifyResultHasKey('repository', user + '/' + repo, dryRun))
       .then(json => {
@@ -119,7 +119,7 @@ const orgContributors = ({
   debug,
   dryRun,
   verbose,
-  name: `orgContributors: ${orgName}`,
+  name: orgName,
   query: queries.orgRepos(orgName, before, after, commits)
 }).then(verifyResultHasKey('organization', orgName, dryRun))
       .then(data => {

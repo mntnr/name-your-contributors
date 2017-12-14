@@ -189,19 +189,21 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
 // Number requests for reference.
 let reqCounter = 1
 
-const parseResponse = (queryResponse, queryName, verbose, debug) => {
+const logResponse = (queryName, verbose, debug) => json => {
+  if (debug) {
+    console.log(`#${reqCounter++} [${queryName}]: \
+${JSON.stringify(json, null, 2)}`)
+  } else if (verbose) {
+    console.log(`#${reqCounter++} [${queryName}]:
+ ${JSON.stringify(json.rateLimit)}`)
+  }
+
+  return json
+}
+
+const parseResponse = queryResponse => {
   const json = JSON.parse(queryResponse)
   if (json.data) {
-    if (debug) {
-      console.log('Result of[' + queryName + ']: ' +
-                  JSON.stringify(json.data, null, 2))
-    }
-    if (verbose) {
-      console.log('Cost of[' + queryName + ']: (' +
-                  '#' + reqCounter++ + ') ' +
-                  JSON.stringify(json.data.rateLimit))
-    }
-
     return json.data
   } else {
     throw new Error('Graphql error: ' + JSON.stringify(json, null, 2))
@@ -234,7 +236,8 @@ const runQueue = () => {
         running = false
       })
 
-      resolve(req.then(x => parseResponse(x, args.name, args.verbose, args.debug)))
+      resolve(req.then(parseResponse)
+              .then(logResponse(args.name, args.verbose, args.debug)))
     }
   }
 }
