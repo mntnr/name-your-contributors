@@ -2,6 +2,10 @@
 
 const https = require('https')
 
+// -----
+// Query Builder DSL
+// -----
+
 /** Escape strings to prevent injection attacks. Other types aren't an issue. */
 const escapeArgValue = val => {
   if (typeof (val) === 'string') {
@@ -23,10 +27,6 @@ const argsString = args => {
   }
 }
 
-let itemToString = () => {
-  throw new Error('not Implemented')
-}
-
 const childrenString = children => {
   if (children.length === 0) {
     return ''
@@ -37,21 +37,14 @@ const childrenString = children => {
       // easy to see where you made a mistake. At least it has so far.
       console.error('Children must be an array. Instead we got:', children)
     }
-    const s = children.map(itemToString)
+    const s = children.map(item => item.toString())
           .reduce((acc, next) => acc + next + '\n', '')
     return '{' + s.substring(0, s.length - 1) + '}'
   }
 }
 
-itemToString = ({name, args, children}) => {
-  if (args == null) {
-    throw new Error(`No args passed to ${name}`)
-  }
-  return name + argsString(args) + childrenString(children)
-}
-
 /**
-  * Returns a queryNode object, our wrapper for the structured creation of
+  * Returns a query object, our wrapper for the structured creation of
   * graphql queries.
   * @param name - the property name from the schema
   * @param args - map of args passed to the property (if required by the
@@ -61,42 +54,91 @@ itemToString = ({name, args, children}) => {
   * @method toString - Prints out the query as a string. Required by the runtime
   * for query execution, also handy for debugging.
   */
-const queryNode = (name, args = {}, children = []) => {
-  const item = {name, args, children}
+const queryRoot = ({name, args, children, type, depaginate}) => {
+  const item = {name, args, children, type, depaginate}
 
-  item.addChild = child => {
-    return queryNode(name, args, children.concat(child))
+  item.addChild = child =>
+    queryRoot({name, args, children: children.concat(child), type, depaginate})
+
+  item.toString = () => {
+    if (args == null) {
+      throw new Error(`No args passed to ${name}`)
+    }
+    return name + argsString(args) + childrenString(children)
   }
-
-  item.toString = () => itemToString(item)
 
   return item
 }
 
+const queryLeaf = name => queryRoot({
+  name,
+  args: {},
+  children: [],
+  type: 'leaf'
+})
+
+const queryNoid = (name, args, children) => queryRoot({
+  name,
+  args,
+  children,
+  type: 'noid'
+})
+
+const queryNode = (name, args, children) => queryRoot({
+  name,
+  args,
+  children: children.concat(queryLeaf('id')),
+  type: 'node'
+})
+
+const pagination = queryRoot({
+  name: 'pageInfo',
+  args: {},
+  children: [queryLeaf('endCursor'), queryLeaf('hasNextPage')],
+  type: 'pagination meta'
+})
+
+const queryEdge = (name, args, children, depaginate = true) => {
+  args.first = 1
+
+  return queryRoot({
+    name,
+    args,
+    type: 'edge',
+    depaginate,
+    children: [pagination]
+  }).addChild(queryNode('nodes', {}, children))
+}
+
+const queryOn = (type, children) => queryRoot({
+  name: `... on ${type}`,
+  args: {},
+  children,
+  type: 'on'
+})
+
+const queryType = (name, type, args, children) =>
+      queryNoid(name, args, [queryOn(type, children)])
+
+// -----
+// Query Execution
+// -----
+
 /** Returns a query string which asks how much quota the given query would
-  * cost. Optionally prevents the query from running.
+  * cost, in addition to the query itself. Optionally prevents the query from
+  * running.
   */
 const queryCost = (item, dryRun) => '{"query": ' +
       JSON.stringify(
         `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining, resetAt}\n` +
           item.toString() + '}') + '}'
 
-/** Converts a queryNode object into a valid graphql query string according to
-Github's conventions. */
-const formatQuery = item => '{"query": ' +
-      JSON.stringify('query{' + item.toString() + '}') + '}'
-
-// Global debug mode.
-let debugMode = false
-
 /** Inner query executor.
 
-    Same params and output as executequery
+    Same params as executequery.
+    Returns the raw HTTP response body.
   */
 const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
-  if (debug) {
-    debugMode = true
-  }
   return new Promise((resolve, reject) => {
     let queryResponse = ''
     const headers = {
@@ -135,7 +177,7 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
 
     req.on('error', reject)
 
-    if (debugMode) {
+    if (debug) {
       console.log('Query[' + name + ']: ' + runQ)
     }
 
@@ -147,10 +189,10 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
 // Number requests for reference.
 let reqCounter = 1
 
-const parseResponse = (queryResponse, queryName, verbose = false) => {
+const parseResponse = (queryResponse, queryName, verbose, debug) => {
   const json = JSON.parse(queryResponse)
   if (json.data) {
-    if (debugMode) {
+    if (debug) {
       console.log('Result of[' + queryName + ']: ' +
                   JSON.stringify(json.data, null, 2))
     }
@@ -185,14 +227,14 @@ const runQueue = () => {
       setTimeout(() => lastMinute--, 60000)
 
       const {args, resolve} = queue.shift()
-      const res = queryRequest(args)
+      const req = queryRequest(args)
 
-      res.then(x => {
+      req.then(x => {
         process.nextTick(runQueue)
         running = false
       })
 
-      resolve(res.then(x => parseResponse(x, args.name, args.verbose)))
+      resolve(req.then(x => parseResponse(x, args.name, args.verbose, args.debug)))
     }
   }
 }
@@ -216,7 +258,9 @@ const executequery = args => executeOnQueue(args)
 
 module.exports = {
   executequery,
-  formatQuery,
   queryNode,
-  queryCost
+  queryNoid,
+  queryLeaf,
+  queryEdge,
+  queryType
 }
