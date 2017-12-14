@@ -284,7 +284,7 @@ const cleanRepo = async ({
       count: 100,
       query: commitQ(before, after)
     })
-    }
+  }
 
   const targets = Array.from(branches).map(b => b.target)
 
