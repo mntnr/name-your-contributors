@@ -60,10 +60,14 @@ const formatReturn = x => {
   }
 }
 
-const handleOut = console.log
+const handleOut = res => {
+  console.log(res)
+  process.exit(0)
+}
 
 const handleError = e => {
   console.error(e.stack)
+  process.exit(0)
 }
 
 const callWithDefaults = (f, opts) => {

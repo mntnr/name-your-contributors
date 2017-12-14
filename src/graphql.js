@@ -93,7 +93,7 @@ let debugMode = false
 
     Same params and output as executequery
   */
-const executequeryRaw = ({token, query, debug, dryRun, verbose, name}) => {
+const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
   if (debug) {
     debugMode = true
   }
@@ -119,21 +119,7 @@ const executequeryRaw = ({token, query, debug, dryRun, verbose, name}) => {
         })
         res.on('end', () => {
           if (res.statusCode === 200) {
-            const json = JSON.parse(queryResponse)
-            if (json.data) {
-              if (debugMode) {
-                console.log('Result of[' + name + ']: ' +
-                            JSON.stringify(json.data, null, 2))
-              }
-              if (verbose) {
-                console.log('Cost of[' + name + ']: ' +
-                            JSON.stringify(json.data.rateLimit))
-              }
-
-              resolve(json.data)
-            } else {
-              reject(new Error('Graphql error: ' + JSON.stringify(json, null, 2)))
-            }
+            resolve(queryResponse)
           } else {
             console.error({
               statusCode: res.statusCode,
@@ -158,49 +144,64 @@ const executequeryRaw = ({token, query, debug, dryRun, verbose, name}) => {
   })
 }
 
-// Global connection
-let running = 0
+// Number requests for reference.
+let reqCounter = 0
+
+const parseResponse = (queryResponse, queryName, verbose = false) => {
+  const json = JSON.parse(queryResponse)
+  if (json.data) {
+    if (debugMode) {
+      console.log('Result of[' + queryName + ']: ' +
+                  JSON.stringify(json.data, null, 2))
+    }
+    if (verbose) {
+      console.log('Cost of[' + queryName + ']: (' +
+                  '#' + reqCounter++ + ') ' +
+                  JSON.stringify(json.data.rateLimit))
+    }
+
+    return json.data
+  } else {
+    throw new Error('Graphql error: ' + JSON.stringify(json, null, 2))
+  }
+}
+
+let running = false
+
 let lastMinute = 0
-
-// Warning about rate throttling
-let warned = false
-
-// Rate limit parameters
-const maxConnections = 1
 const maxPerMinute = 300
 
-const allocate = (args, verbose, debug) => {
-  if (debug) {
-    if (running > 0) {
-      console.log(`Running: ${running}, lastMinute: ${lastMinute}`)
+const queue = []
+
+const runQueue = () => {
+  if (running) {
+    // noop
+  } else if (lastMinute >= maxPerMinute) {
+    setTimeout(runQueue, 1000)
+  } else {
+    if (queue.length > 0) {
+      running = true
+      lastMinute++
+      setTimeout(() => lastMinute--, 60000)
+
+      const {args, resolve} = queue.shift()
+      const res = queryRequest(args)
+
+      res.then(x => {
+        process.nextTick(runQueue)
+        running = false
+      })
+
+      resolve(res.then(x => parseResponse(x, args.name, args.verbose)))
     }
   }
-  return new Promise((resolve, reject) => {
-    if (running < maxConnections && lastMinute < maxPerMinute) {
-      running++
-      lastMinute++
-      resolve(executequeryRaw(args))
-    } else {
-      if (!warned && lastMinute >= maxPerMinute) {
-        warned = true
-        console.log('Warning!!! Rate throttling has taken effect. This query might take awhile; go grab some coffee.')
-      }
-      if (verbose && !debug && lastMinute >= maxPerMinute) {
-        console.log(`Throttled!! Running: ${running}, lastMinute: ${lastMinute}`)
-      }
-      setTimeout(() => resolve(allocate(args, verbose, debug)), 1000)
-    }
-  })
 }
 
-const finished = () => {
-  running--
-}
-
-const free = res => {
-  setTimeout(() => lastMinute--, 60000)
-  res.then(finished).catch(finished)
-}
+const executeOnQueue = args =>
+      new Promise((resolve, reject) => {
+        queue.push({args, resolve, reject})
+        runQueue()
+      })
 
 /**
   * Returns a promise which will yeild a query result.
@@ -211,11 +212,7 @@ const free = res => {
   * @param {bool}      debug   - Debug mode: VERY verbose logging.
   * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
   */
-const executequery = args => {
-  const response = allocate(args, args.verbose, args.debug)
-  free(response)
-  return response
-}
+const executequery = args => executeOnQueue(args)
 
 module.exports = {
   executequery,
