@@ -284,7 +284,7 @@ const cleanRepo = async ({
       count: 100,
       query: commitQ(before, after)
     })
-    }
+  }
 
   const targets = Array.from(branches).map(b => b.target)
 
@@ -387,7 +387,7 @@ const cleanRepo = async ({
       token,
       name: 'pr comment reactions cont',
       acc: prc => prc.reactions.nodes,
-      type: 'PullRequestComment',
+      type: 'IssueComment',
       key: 'reactions',
       query: reactorSubQ
     })).concat(await depaginateAll(issues, {

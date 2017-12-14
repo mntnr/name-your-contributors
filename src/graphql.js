@@ -78,7 +78,7 @@ const queryNode = (name, args = {}, children = []) => {
   */
 const queryCost = (item, dryRun) => '{"query": ' +
       JSON.stringify(
-        `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining}\n` +
+        `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining, resetAt}\n` +
           item.toString() + '}') + '}'
 
 /** Converts a queryNode object into a valid graphql query string according to
@@ -88,18 +88,12 @@ const formatQuery = item => '{"query": ' +
 
 // Global debug mode.
 let debugMode = false
-let reqCounter = 1
 
-/**
-  * Returns a promise which will yeild a query result.
-  * @param {string}    token   - Github auth token.
-  * @param {queryNode} query   - The query to execute.
-  * @param {string}    name    - Name of this query. For debugging only.
-  * @param {bool}      verbose - Enable verbose logging.
-  * @param {bool}      debug   - Debug mode: VERY verbose logging.
-  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
+/** Inner query executor.
+
+    Same params and output as executequery
   */
-const executequery = ({token, query, debug, dryRun, verbose, name}) => {
+const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
   if (debug) {
     debugMode = true
   }
@@ -125,22 +119,7 @@ const executequery = ({token, query, debug, dryRun, verbose, name}) => {
         })
         res.on('end', () => {
           if (res.statusCode === 200) {
-            const json = JSON.parse(queryResponse)
-            if (json.data) {
-              if (debugMode) {
-                console.log('Result of[' + name + ']: ' +
-                            JSON.stringify(json.data, null, 2))
-              }
-              if (verbose) {
-                console.log('Cost of[' + name + ']: (' +
-                            '#' + reqCounter++ + ') ' +
-                            JSON.stringify(json.data.rateLimit))
-              }
-
-              resolve(json.data)
-            } else {
-              reject(new Error('Graphql error: ' + JSON.stringify(json, null, 2)))
-            }
+            resolve(queryResponse)
           } else {
             console.error({
               statusCode: res.statusCode,
@@ -164,6 +143,76 @@ const executequery = ({token, query, debug, dryRun, verbose, name}) => {
     req.end()
   })
 }
+
+// Number requests for reference.
+let reqCounter = 1
+
+const parseResponse = (queryResponse, queryName, verbose = false) => {
+  const json = JSON.parse(queryResponse)
+  if (json.data) {
+    if (debugMode) {
+      console.log('Result of[' + queryName + ']: ' +
+                  JSON.stringify(json.data, null, 2))
+    }
+    if (verbose) {
+      console.log('Cost of[' + queryName + ']: (' +
+                  '#' + reqCounter++ + ') ' +
+                  JSON.stringify(json.data.rateLimit))
+    }
+
+    return json.data
+  } else {
+    throw new Error('Graphql error: ' + JSON.stringify(json, null, 2))
+  }
+}
+
+let running = false
+
+let lastMinute = 0
+const maxPerMinute = 300
+
+const queue = []
+
+const runQueue = () => {
+  if (running) {
+    // noop
+  } else if (lastMinute >= maxPerMinute) {
+    setTimeout(runQueue, 1000)
+  } else {
+    if (queue.length > 0) {
+      running = true
+      lastMinute++
+      setTimeout(() => lastMinute--, 60000)
+
+      const {args, resolve} = queue.shift()
+      const res = queryRequest(args)
+
+      res.then(x => {
+        process.nextTick(runQueue)
+        running = false
+      })
+
+      resolve(res.then(x => parseResponse(x, args.name, args.verbose)))
+    }
+  }
+}
+
+const executeOnQueue = args =>
+      new Promise((resolve, reject) => {
+        queue.push({args, resolve, reject})
+        runQueue()
+      })
+
+/**
+  * Returns a promise which will yeild a query result.
+  * @param {string}    token   - Github auth token.
+  * @param {queryNode} query   - The query to execute.
+  * @param {string}    name    - Name of this query. For debugging only.
+  * @param {bool}      verbose - Enable verbose logging.
+  * @param {bool}      debug   - Debug mode: VERY verbose logging.
+  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
+  */
+const executequery = args => executeOnQueue(args)
 
 module.exports = {
   executequery,
