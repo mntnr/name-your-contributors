@@ -2,129 +2,86 @@
 
 const graphql = require('./graphql')
 const node = graphql.queryNode
+const noid = graphql.queryNoid
+const edge = graphql.queryEdge
+const val = graphql.queryLeaf
+const typedNode = graphql.queryType
 
 /// //
 // Queries
 /// //
 
-const whoAmI = node('viewer').addChild(node('login'))
+const whoAmI = node('viewer', {}, ['login'])
 
-const pagination = node('pageInfo')
-      .addChild(node('endCursor'))
-      .addChild(node('hasNextPage'))
+const userInfo = node('user', {}, [
+  val('login'),
+  val('name'),
+  val('url')
+])
 
-const userInfo = node('user')
-      .addChild(node('login'))
-      .addChild(node('name'))
-      .addChild(node('url'))
+const authoredQ = [
+  typedNode('author', 'User', {}, [
+    val('login'),
+    val('name'),
+    val('url')
+  ]),
+  val('createdAt')
+]
 
-const reactorSubQ = node('nodes')
-      .addChild(node('id'))
-      .addChild(node('createdAt'))
-      .addChild(userInfo)
+const reactorQ = edge('reactions', {}, [userInfo, val('createdAt')])
 
-const reactorQ = node('reactions', {first: 1})
-      .addChild(pagination)
-      .addChild(reactorSubQ)
+const commitAuthorQ = noid('author', {}, [userInfo])
 
-const authoredQ = node('nodes')
-      .addChild(node('id'))
-      .addChild(node('author')
-                .addChild(node('login'))
-                .addChild(node('... on User')
-                          .addChild(node('name'))
-                          .addChild(node('url'))))
-      .addChild(node('createdAt'))
-
-const commitAuthorQ = node('author').addChild(userInfo)
-
-const commitHistoryQ = node('nodes')
-      .addChild(node('id'))
-      .addChild(commitAuthorQ)
-
-const commitQ = (before, after) => {
+const repoSubQuery = (before, after, commits, reactionsInQuery) => {
   const b = before.toISOString()
   const a = after.toISOString()
-  return node('target')
-    .addChild(node('id'))
-    .addChild(node('... on Commit')
-              .addChild(
-                node('history', {first: 1, since: a, until: b})
-                  .addChild(pagination)
-                  .addChild(commitHistoryQ)))
+
+  const masterCommits = node('ref', {qualifiedName: 'refs/heads/master'}, [
+    typedNode('target', 'Commit', {}, [
+      edge('history', {since: a, until: b}, [commitAuthorQ], true)
+    ])
+  ])
+
+  const authoredWithReactionsQ = reactionsInQuery
+        ? authoredQ.concat(reactorQ)
+        : authoredQ
+
+  const participantsQ = authoredWithReactionsQ
+        .concat(edge('comments', {}, [authoredWithReactionsQ]))
+
+  const reviewQ = edge('reviews', {}, [authoredQ])
+
+  const prsQ = edge('pullRequests', {}, [
+    participantsQ.concat(reviewQ)
+  ])
+
+  const issuesQ = edge('issues', {}, participantsQ)
+
+  const commitCommentQ = edge('commitComments', {}, [
+    authoredWithReactionsQ
+  ])
+
+  const children = [prsQ, issuesQ]
+
+  if (commits) {
+    children.push(commitCommentQ)
+    children.push(masterCommits)
+  }
+  return children
 }
-
-const refsQ = (before, after) =>
-      node('ref', {qualifiedName: 'refs/heads/master'})
-      .addChild(commitQ(before, after))
-
-const authoredWithReactionsQ = authoredQ
-      .addChild(reactorQ)
-
-const reviewQ = node('reviews', {first: 1})
-      .addChild(pagination)
-      .addChild(authoredQ)
-
-const participantsQ = authoredWithReactionsQ
-      .addChild(node('comments', {first: 1})
-                .addChild(pagination)
-                .addChild(authoredWithReactionsQ))
-
-const prsContQ = participantsQ.addChild(reviewQ)
-
-const prsQ = top =>
-      node('pullRequests', {first: top === true ? 100 : 1})
-      .addChild(pagination)
-      .addChild(prsContQ)
-
-const issuesQ = top =>
-      node('issues', {first: top === true ? 100 : 1})
-      .addChild(pagination)
-      .addChild(participantsQ)
-
-const commitCommentQ = top =>
-      node('commitComments', {first: top === true ? 100 : 1})
-      .addChild(pagination)
-      .addChild(authoredWithReactionsQ)
 
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName, before, after, commits) => {
-  let q = node('repository', {name: repoName, owner: ownerName})
-      .addChild(node('id'))
-      .addChild(prsQ(true))
-      .addChild(issuesQ(true))
-
-  if (commits) {
-    q = q.addChild(commitCommentQ(true))
-      .addChild(refsQ(before, after))
-  }
-
-  return q
+  return node('repository', {name: repoName, owner: ownerName},
+              repoSubQuery(before, after, commits))
 }
 
-const repositoryCont = (before, after, commits) => {
-  let q = node('nodes')
-      .addChild(node('id'))
-      .addChild(prsQ(false))
-      .addChild(issuesQ(false))
-      .addChild(refsQ(before, after))
-
-  if (commits) {
-    q = q.addChild(commitCommentQ(false))
-  }
-
-  return q
-}
-
-const repositories = (before, after, top, commits) =>
-      node('repositories', {first: top === true ? 100 : 1})
-      .addChild(pagination)
-      .addChild(repositoryCont(before, after, commits))
+const repositories = (before, after, commits) =>
+      edge('repositories', {}, repoSubQuery(before, after, commits))
 
 const orgRepos = (name, before, after, commits) =>
-      node('organization', {login: name})
-      .addChild(node('id'))
-      .addChild(repositories(before, after, true, commits))
+      node('organization', {login: name},
+           [repositories(before, after, true, commits)])
 
 const continuationQuery = ({
   id, parentType, childType, cursor, query, before, after
@@ -140,7 +97,6 @@ const continuationQuery = ({
     .addChild(node('id'))
     .addChild(node(`... on ${parentType}`)
               .addChild(node(childType, args)
-                        .addChild(pagination)
                         .addChild(query)))
 }
 
