@@ -121,7 +121,23 @@ const queryType = (name, type, args, children) =>
       queryNoid(name, args, [queryOn(type, children)])
 
 // -----
-// Query Execution
+// Clean response tree
+// -----
+
+const pruneTree = ({query}) => json => {
+  return json
+}
+
+// -----
+// Query Depagination
+// -----
+
+const depaginate = ({query}) => ({json}) => {
+  return json
+}
+
+// -----
+// Execution of Queries
 // -----
 
 /** Returns a query string which asks how much quota the given query would
@@ -135,7 +151,7 @@ const queryCost = (item, dryRun) => '{"query": ' +
 
 /** Inner query executor.
 
-    Same params as executequery.
+    Same params as execute.
     Returns the raw HTTP response body.
   */
 const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
@@ -147,6 +163,9 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
       'User-Agent': 'Name-Your-Contributors',
       'Authorization': `bearer ${token}`
     }
+
+    const runQ = queryCost(query, dryRun)
+
     const req = https.request(
       {
         method: 'post',
@@ -161,11 +180,17 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
         })
         res.on('end', () => {
           if (res.statusCode === 200) {
-            resolve(queryResponse)
+            resolve({
+              query: runQ,
+              body: queryResponse,
+              status: res.statusCode,
+              headers: res.headers
+            })
           } else {
             console.error({
               statusCode: res.statusCode,
               statusMessage: res.statusMessage,
+              headers: res.headers,
               responseBody: queryResponse
             })
             reject(new Error(res.statusMessage))
@@ -173,13 +198,7 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
         })
       })
 
-    const runQ = queryCost(query, dryRun)
-
     req.on('error', reject)
-
-    if (debug) {
-      console.log('Query[' + name + ']: ' + runQ)
-    }
 
     req.write(runQ)
     req.end()
@@ -189,22 +208,31 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
 // Number requests for reference.
 let reqCounter = 1
 
-const logResponse = (queryName, verbose, debug) => json => {
+const logResponse = (queryName, verbose, debug) => res => {
+  const {query, json, headers} = res
+
   if (debug) {
-    console.log(`#${reqCounter++} [${queryName}]: \
-${JSON.stringify(json, null, 2)}`)
+    console.log(`#${reqCounter++} [${queryName}]:
+Query:
+${query}
+Response headers:
+${JSON.stringify(headers, null, 2)}
+Response body:
+${JSON.stringify(json, null, 2)}
+`)
   } else if (verbose) {
     console.log(`#${reqCounter++} [${queryName}]:
- ${JSON.stringify(json.rateLimit)}`)
+${JSON.stringify(json.rateLimit)}`)
   }
 
-  return json
+  return res
 }
 
-const parseResponse = queryResponse => {
-  const json = JSON.parse(queryResponse)
+const parseResponse = args => {
+  const json = JSON.parse(args.body)
   if (json.data) {
-    return json.data
+    args.json = json.data
+    return args
   } else {
     throw new Error('Graphql error: ' + JSON.stringify(json, null, 2))
   }
@@ -236,8 +264,7 @@ const runQueue = () => {
         running = false
       })
 
-      resolve(req.then(parseResponse)
-              .then(logResponse(args.name, args.verbose, args.debug)))
+      resolve(req)
     }
   }
 }
@@ -249,7 +276,7 @@ const executeOnQueue = args =>
       })
 
 /**
-  * Returns a promise which will yeild a query result.
+  * Returns a promise which will yield a query result.
   * @param {string}    token   - Github auth token.
   * @param {queryNode} query   - The query to execute.
   * @param {string}    name    - Name of this query. For debugging only.
@@ -257,10 +284,21 @@ const executeOnQueue = args =>
   * @param {bool}      debug   - Debug mode: VERY verbose logging.
   * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
   */
-const executequery = args => executeOnQueue(args)
+const rawResponse = args => executeOnQueue(args)
+
+const initialRequest = args =>
+      rawResponse(args)
+      .then(parseResponse)
+      .then(logResponse(args.name, args.verbose, args.debug))
+
+const fetchAll = args =>
+      initialRequest(args)
+      .then(depaginate(args))
+
+const execute = args => fetchAll(args).then(pruneTree(args))
 
 module.exports = {
-  executequery,
+  execute,
   queryNode,
   queryNoid,
   queryLeaf,

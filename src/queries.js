@@ -115,7 +115,7 @@ const fetchAll = async ({
   token, acc, data, type, key, query, name, before, after
 }) => {
   if (data[key].pageInfo.hasNextPage) {
-    const next = await graphql.executequery({
+    const next = await graphql.execute({
       token,
       name,
       verbose: verboseCont,
