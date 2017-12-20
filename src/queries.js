@@ -150,7 +150,7 @@ const repoSynopsis = ({json, before, after, commits, reactions}) => {
 
   const prs = json.repository.pullRequests.nodes
   const prComments = flatten(prs.map(p => p.comments.nodes))
-  const reviews = flatten(prs.map(p => p.reviews))
+  const reviews = flatten(prs.map(p => p.reviews.nodes))
 
   const issues = repo.issues.nodes
   const issueComments = flatten(issues.map(i => i.comments.nodes))
@@ -164,8 +164,9 @@ const repoSynopsis = ({json, before, after, commits, reactions}) => {
   }
 
   if (reactions) {
-    const reactors = issueComments.map(c => c.reactions.nodes).concat(
-      prComments.map(c => c.reactions.nodes))
+    const reactors = flatten(issueComments.map(c => c.reactions.nodes).concat(
+      prComments.map(c => c.reactions.nodes)
+    ))
 
     processed.reactors = process(reactors)
   }
