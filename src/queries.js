@@ -67,7 +67,7 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
     authoredWithReactionsQ
   ])
 
-  const children = [prsQ, issuesQ]
+  const children = [prsQ, issuesQ, val('nameWithOwner')]
 
   if (commits) {
     children.push(commitCommentQ)
