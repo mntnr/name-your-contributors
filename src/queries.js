@@ -194,7 +194,7 @@ const mergeRepoResults = repos =>
         return ret
       })
 
-const cleanOrgRepos = ({
+const orgSynopsis = ({
   json, before, after, commits, reactions
 }) => {
   const repos = json.organization.repositories.nodes
@@ -218,7 +218,7 @@ module.exports = {
   cleanWhoAmI,
   repository,
   orgRepos,
-  cleanOrgRepos,
+  orgSynopsis,
   timeFilter,
   flatten,
   users,

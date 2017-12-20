@@ -20,6 +20,8 @@ const cli = meow([`
     -c, --config  - Operate from config file. In this mode only token, verbose, and
                     debug flags apply.
 
+    --full        - Returns the full tree of contributions rather than the default
+                    synopsis.
     --csv         - Output data in CSV format
 
     --commits     - Get commit authors and comments from GitHub
@@ -68,12 +70,18 @@ const defaultOpts = opts => {
   opts.verbose = cli.flags.v
   opts.commits = !cli.flags.localDir && cli.flags.commits
   opts.reactions = cli.flags.reactions
+  opts.full = cli.flags.full
 
   return opts
 }
 
 if (!token && !cli.flags.c) {
   console.error('A token is needed to access the GitHub API. Please provide one with -t or the GITHUB_TOKEN environment variable.')
+  process.exit(1)
+}
+
+if (cli.flags.full && cli.flags.csv) {
+  console.error('Cannot format full tree output as CSV.')
   process.exit(1)
 }
 
@@ -92,7 +100,6 @@ const cleanup = () => {
     setTimeout(cleanup, 1000)
   }
 }
-
 
 const handleOut = res => {
   console.log(res)

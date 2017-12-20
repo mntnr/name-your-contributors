@@ -209,6 +209,47 @@ const depaginate = args => async response => {
 }
 
 // -----
+// Cleaner models
+// -----
+
+const cleanChildren = (json, children) => {
+  children.map(child => {
+    cleanwalk(json, child)
+  })
+}
+
+const cleanwalk = (json, query) => {
+  const {type, name} = query
+
+  if (type === 'leaf') {
+  } else if (type === 'edge') {
+    json[name] = json[name].nodes
+    const children = find(query.children, 'nodes').children
+    json[name].map(node => {
+      delete node.id
+      delete node.__typename
+      cleanChildren(node, children)
+    })
+  } else if (type === 'typed') {
+    delete json[name].id
+    delete json[name].__typename
+    cleanChildren(json[name], query.children[0].children)
+  } else if (type === 'node') {
+    delete json[name].id
+    delete json[name].__typename
+    cleanChildren(json[name], query.children)
+  } else {
+    cleanChildren(json[name], query.children)
+  }
+}
+
+const pruneTree = (json, query) => {
+  cleanwalk(json, query)
+  delete json.rateLimit
+  return json
+}
+
+// -----
 // Execution of Queries
 // -----
 
@@ -369,8 +410,11 @@ const execute = args => initialRequest(args)
       .then(depaginate(args))
       .then(x => x.json)
 
+const prune = args => execute(args).then(json => pruneTree(json, args.query))
+
 module.exports = {
   execute,
+  prune,
   done,
   queryNode,
   queryNoid,
