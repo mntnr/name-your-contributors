@@ -82,27 +82,19 @@ const verifyResultHasKey = (key, query, dryRun) =>
   */
 const repoContributors = ({
   token, user, repo, before, after, debug, dryRun, verbose, commits, reactions
-}) => graphql.executequery({
+}) => graphql.execute({
   token,
   debug,
   dryRun,
   verbose,
   name: `${user}/${repo}`,
-  query: queries.repository(repo, user, before, after, commits)
+  query: queries.repository(repo, user, before, after, commits, reactions)
 }).then(verifyResultHasKey('repository', user + '/' + repo, dryRun))
       .then(json => {
         if (dryRun) {
           return json
         } else {
-          return queries.cleanRepo({
-            result: json.repository,
-            token,
-            before,
-            after,
-            verbose,
-            commits,
-            reactions
-          })
+          return queries.repoSynopsis({json, before, after, commits, reactions})
         }
       })
 
@@ -114,20 +106,20 @@ const repoContributors = ({
   */
 const orgContributors = ({
   token, orgName, before, after, debug, dryRun, verbose, commits, reactions
-}) => graphql.executequery({
+}) => graphql.execute({
   token,
   debug,
   dryRun,
   verbose,
   name: orgName,
-  query: queries.orgRepos(orgName, before, after, commits)
+  query: queries.orgRepos(orgName, before, after, commits, reactions)
 }).then(verifyResultHasKey('organization', orgName, dryRun))
-      .then(data => {
+      .then(json => {
         if (dryRun) {
-          return data
+          return json
         } else {
           return queries.cleanOrgRepos({
-            token, result: data, before, after, verbose, commits, reactions
+            json, before, after, commits, reactions
           })
         }
       })
@@ -196,7 +188,7 @@ const fromConfig = async ({
  * @param token - GitHub Auth token
  */
 const currentUser = token =>
-      graphql.executequery({
+      graphql.execute({
         token,
         query: queries.whoAmI
       }).then(queries.cleanWhoAmI)

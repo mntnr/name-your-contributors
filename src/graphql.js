@@ -54,11 +54,11 @@ const childrenString = children => {
   * @method toString - Prints out the query as a string. Required by the runtime
   * for query execution, also handy for debugging.
   */
-const queryRoot = ({name, args, children, type, depaginate}) => {
-  const item = {name, args, children, type, depaginate}
+const queryRoot = ({name, args, children, type}) => {
+  const item = {name, args, children, type}
 
   item.addChild = child =>
-    queryRoot({name, args, children: children.concat(child), type, depaginate})
+    queryRoot({name, args, children: children.concat(child), type})
 
   item.toString = () => {
     if (args == null) {
@@ -87,7 +87,7 @@ const queryNoid = (name, args, children) => queryRoot({
 const queryNode = (name, args, children) => queryRoot({
   name,
   args,
-  children: children.concat(queryLeaf('id')),
+  children: children.concat([queryLeaf('id'), queryLeaf('__typename')]),
   type: 'node'
 })
 
@@ -98,42 +98,114 @@ const pagination = queryRoot({
   type: 'pagination meta'
 })
 
-const queryEdge = (name, args, children, depaginate = true) => {
-  args.first = 1
+const queryEdge = (name, args, children) => {
+  args.first = args.first || 1
 
   return queryRoot({
     name,
     args,
     type: 'edge',
-    depaginate,
     children: [pagination]
   }).addChild(queryNode('nodes', {}, children))
 }
 
-const queryOn = (type, children) => queryRoot({
-  name: `... on ${type}`,
-  args: {},
-  children,
-  type: 'on'
+const queryOn = (type, children) =>
+      queryNode(`... on ${type}`, {}, children)
+
+const queryType = (name, type, args, children) => queryRoot({
+  name,
+  args,
+  type: 'typed',
+  children: [queryOn(type, children)]
 })
-
-const queryType = (name, type, args, children) =>
-      queryNoid(name, args, [queryOn(type, children)])
-
-// -----
-// Clean response tree
-// -----
-
-const pruneTree = ({query}) => json => {
-  return json
-}
 
 // -----
 // Query Depagination
 // -----
 
-const depaginate = ({query}) => ({json}) => {
-  return json
+// Kludgy non-destructive assoc
+const assoc = (o, k, v, k2, v2) => {
+  const out = {}
+  Object.assign(out, o)
+  out[k] = v
+  if (k2 && v2) {
+    out[k2] = v2
+  }
+  return out
+}
+
+const find = (l, k) => {
+  for (const o of l) {
+    if (o.name === k) {
+      return o
+    }
+  }
+  throw new Error(`Could not find ${k} in ${l}`)
+}
+
+const fetchAll = async (reqargs, query, cursor, id, type) => {
+  const args = assoc(query.args, 'first', 100, 'after', cursor)
+  const q = queryType('node', type, {id: id}, [
+    queryNoid(query.name, args, query.children)
+  ])
+
+  const response = await initialRequest(assoc(reqargs, 'query', q))
+  const {endCursor, hasNextPage} = response.json.node[query.name].pageInfo
+
+  if (hasNextPage) {
+    const more = await fetchAll(reqargs, query, endCursor, id, type)
+
+    return {
+      pageInfo: more.pageInfo,
+      nodes: response.json.node[query.name].nodes.concat(more.nodes)
+    }
+  } else {
+    return {
+      pageInfo: {endCursor, hasNextPage},
+      nodes: response.json.node[query.name].nodes
+    }
+  }
+}
+
+const walkChildren = async (args, children, response) => {
+  await Promise.all(children.map(child => depWalk(args, child, response)))
+}
+
+const walkEdge = async (args, query, parent) => {
+  const response = parent[query.name]
+  const {hasNextPage, endCursor} = response.pageInfo
+  if (hasNextPage) {
+    const {pageInfo, nodes} = await fetchAll(
+      args, query, endCursor, parent.id, parent.__typename
+    )
+
+    response.nodes = response.nodes.concat(nodes)
+    response.pageInfo = pageInfo
+  }
+
+  const children = find(query.children, 'nodes').children
+  await Promise.all(
+    response.nodes.map(node => walkChildren(args, children, node))
+  )
+}
+
+const depWalk = async (args, query, response) => {
+  const {type, name} = query
+  const next = response[name]
+
+  if (type === 'leaf') {
+  } else if (query.type === 'edge') {
+    await walkEdge(args, query, response)
+  } else if (type === 'typed') {
+    await walkChildren(args, query.children[0].children, next)
+  } else {
+    await walkChildren(args, query.children, next)
+  }
+}
+
+const depaginate = args => async response => {
+  await depWalk(args, args.query, response.json, null)
+  return response
 }
 
 // -----
@@ -222,7 +294,7 @@ ${JSON.stringify(json, null, 2)}
 `)
   } else if (verbose) {
     console.log(`#${reqCounter++} [${queryName}]:
-${JSON.stringify(json.rateLimit)}`)
+  ${JSON.stringify(json.rateLimit)}`)
   }
 
   return res
@@ -269,6 +341,8 @@ const runQueue = () => {
   }
 }
 
+const done = () => !running && queue.length === 0
+
 const executeOnQueue = args =>
       new Promise((resolve, reject) => {
         queue.push({args, resolve, reject})
@@ -291,14 +365,13 @@ const initialRequest = args =>
       .then(parseResponse)
       .then(logResponse(args.name, args.verbose, args.debug))
 
-const fetchAll = args =>
-      initialRequest(args)
+const execute = args => initialRequest(args)
       .then(depaginate(args))
-
-const execute = args => fetchAll(args).then(pruneTree(args))
+      .then(x => x.json)
 
 module.exports = {
   execute,
+  done,
   queryNode,
   queryNoid,
   queryLeaf,

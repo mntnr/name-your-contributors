@@ -3,6 +3,7 @@
 
 const meow = require('meow')
 const main = require('./index')
+const done = require('./graphql').done
 
 const cli = meow([`
   Usage
@@ -84,14 +85,23 @@ const formatReturn = x => {
   }
 }
 
+const cleanup = () => {
+  if (done()) {
+    process.exit(0)
+  } else {
+    setTimeout(cleanup, 1000)
+  }
+}
+
+
 const handleOut = res => {
   console.log(res)
-  process.exit(0)
+  cleanup()
 }
 
 const handleError = e => {
   console.error(e.stack)
-  process.exit(0)
+  process.exit(1)
 }
 
 const handle = (f, opts) =>
