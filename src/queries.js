@@ -229,11 +229,25 @@ const orgSynopsis = ({
     }))
 }
 
+const filterOrg = (json, tf) => json
+const filterRepo = (json, tf) => json
+
+const timeFilterFullTree = (before, after, json) => {
+  const tf = timeFilter(before, after)
+
+  if (json.organisation) {
+    return filterOrg(json, tf)
+  } else {
+    return filterRepo(json, tf)
+  }
+}
+
 const cleanWhoAmI = x => x.viewer.login
 
 module.exports = {
   whoAmI,
   cleanWhoAmI,
+  timeFilterFullTree,
   repository,
   orgRepos,
   orgSynopsis,

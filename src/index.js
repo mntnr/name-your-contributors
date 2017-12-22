@@ -73,6 +73,9 @@ const verifyResultHasKey = (key, query, dryRun) =>
 // API
 //
 
+const prunedFetch = args => graphql.prune(args)
+      .then(json => queries.timeFilterFullTree(json, args.before, args.after))
+
 /** Returns all contributions to a repo.
   * @param token  - GitHub auth token
   * @param user   - Username to whom the repo belongs
@@ -94,7 +97,7 @@ const repoContributors = ({
           }
         })
 
-  const qfn = full ? graphql.prune : summarize
+  const qfn = full ? prunedFetch : summarize
 
   return qfn({
     token,
@@ -128,7 +131,7 @@ const orgContributors = ({
           }
         })
 
-  const qfn = full ? graphql.prune : summarise
+  const qfn = full ? prunedFetch : summarise
 
   return qfn({
     token,
