@@ -130,8 +130,13 @@ const queryEdge = (name, args, children) => {
   }).addChild(queryNode('nodes', {}, children))
 }
 
-const queryOn = (type, children) =>
-      queryNode(`... on ${type}`, {}, children)
+const queryOn = (type, children) => queryRoot({
+  name: `... on ${type}`,
+  args: {},
+  children,
+  type: 'on',
+  nodeType: type
+})
 
 /** Returns a branching typecasting query node. Necessary for any node in an API
   * that returns an interface.
