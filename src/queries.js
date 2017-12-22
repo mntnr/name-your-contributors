@@ -74,7 +74,13 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
     authoredWithReactionsQ
   ])
 
-  const children = [prsQ, issuesQ, val('nameWithOwner')]
+  const children = [
+    prsQ,
+    issuesQ,
+    val('homepageUrl'),
+    val('name'),
+    node('owner', {}, [val('login')])
+  ]
 
   if (commits) {
     children.push(commitCommentQ)
@@ -92,8 +98,12 @@ const repositories = (before, after, commits, reactions) =>
       edge('repositories', {}, repoSubQuery(before, after, commits, reactions))
 
 const orgRepos = (name, before, after, commits, reactions) =>
-      node('organization', {login: name},
-           [repositories(before, after, commits, reactions)])
+      node('organization', {login: name}, [
+        repositories(before, after, commits, reactions),
+        val('name'),
+        val('login'),
+        val('email')
+      ])
 
 /// //
 // Data Filtering (co-queries if you will)

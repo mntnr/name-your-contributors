@@ -109,8 +109,13 @@ const queryEdge = (name, args, children) => {
   }).addChild(queryNode('nodes', {}, children))
 }
 
-const queryOn = (type, children) =>
-      queryNode(`... on ${type}`, {}, children)
+const queryOn = (type, children) => queryRoot({
+  name: `... on ${type}`,
+  args: {},
+  children,
+  type: 'on',
+  nodeType: type
+})
 
 const queryType = (name, args, types) => {
   const children = types.map(([type, children]) => queryOn(type, children))
@@ -235,10 +240,12 @@ const cleanwalk = (json, query) => {
       delete node.__typename
       cleanChildren(node, children)
     })
-  } else if (type === 'type') {
+  } else if (type === 'typed') {
     delete json[name].id
     delete json[name].__typename
-    cleanChildren(json[name], query.children[0].children)
+    for (const child of query.children) {
+      cleanChildren(json[name], child.children)
+    }
   } else if (type === 'node') {
     delete json[name].id
     delete json[name].__typename
