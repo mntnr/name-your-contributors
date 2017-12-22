@@ -20,10 +20,15 @@ const userInfo = node('user', {}, [
 ])
 
 const authoredQ = [
-  typedNode('author', 'User', {}, [
-    val('login'),
-    val('name'),
-    val('url')
+  typedNode('author', {}, [
+    ['User', [
+      val('login'),
+      val('name'),
+      val('url')
+    ]],
+    ['Bot', [
+      val('login')
+    ]]
   ]),
   val('createdAt')
 ]
@@ -43,8 +48,10 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
   const a = after.toISOString()
 
   const masterCommits = node('ref', {qualifiedName: 'refs/heads/master'}, [
-    typedNode('target', 'Commit', {}, [
-      edge('history', {since: a, until: b}, [commitAuthorQ], true)
+    typedNode('target', {}, [
+      ['Commit', [
+        edge('history', {since: a, until: b}, [commitAuthorQ], true)
+      ]]
     ])
   ])
 

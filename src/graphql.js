@@ -112,12 +112,15 @@ const queryEdge = (name, args, children) => {
 const queryOn = (type, children) =>
       queryNode(`... on ${type}`, {}, children)
 
-const queryType = (name, type, args, children) => queryRoot({
-  name,
-  args,
-  type: 'typed',
-  children: [queryOn(type, children)]
-})
+const queryType = (name, args, types) => {
+  const children = types.map(([type, children]) => queryOn(type, children))
+  return queryRoot({
+    name,
+    args,
+    type: 'typed',
+    children: children
+  })
+}
 
 // -----
 // Query Depagination
@@ -145,8 +148,10 @@ const find = (l, k) => {
 
 const fetchAll = async (reqargs, query, cursor, id, type) => {
   const args = assoc(query.args, 'first', 100, 'after', cursor)
-  const q = queryType('node', type, {id: id}, [
-    queryNoid(query.name, args, query.children)
+  const q = queryType('node', {id: id}, [
+    [type, [
+      queryNoid(query.name, args, query.children)
+    ]]
   ])
 
   const response = await initialRequest(assoc(reqargs, 'query', q))
@@ -230,7 +235,7 @@ const cleanwalk = (json, query) => {
       delete node.__typename
       cleanChildren(node, children)
     })
-  } else if (type === 'typed') {
+  } else if (type === 'type') {
     delete json[name].id
     delete json[name].__typename
     cleanChildren(json[name], query.children[0].children)
