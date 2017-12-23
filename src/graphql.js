@@ -109,13 +109,8 @@ const queryEdge = (name, args, children) => {
   }).addChild(queryNode('nodes', {}, children))
 }
 
-const queryOn = (type, children) => queryRoot({
-  name: `... on ${type}`,
-  args: {},
-  children,
-  type: 'on',
-  nodeType: type
-})
+const queryOn = (type, children) =>
+      queryNode(`... on ${type}`, {}, children)
 
 const queryType = (name, args, types) => {
   const children = types.map(([type, children]) => queryOn(type, children))
@@ -203,11 +198,13 @@ const depWalk = async (args, query, response) => {
   const {type, name} = query
   const next = response[name]
 
-  if (type === 'leaf') {
+  if (next == null || type === 'leaf') {
   } else if (query.type === 'edge') {
     await walkEdge(args, query, response)
   } else if (type === 'typed') {
-    await walkChildren(args, query.children[0].children, next)
+    for (const child of query.children) {
+      await walkChildren(args, child.children, next)
+    }
   } else {
     await walkChildren(args, query.children, next)
   }
@@ -231,7 +228,7 @@ const cleanChildren = (json, children) => {
 const cleanwalk = (json, query) => {
   const {type, name} = query
 
-  if (type === 'leaf') {
+  if (json[name] == null || type === 'leaf') {
   } else if (type === 'edge') {
     json[name] = json[name].nodes
     const children = find(query.children, 'nodes').children

@@ -189,7 +189,9 @@ const repoSynopsis = ({json, before, after, commits, reactions}) => {
   }
 
   if (commits) {
-    const commitAuthors = repo.ref.target.history.nodes.map(x => x.author)
+    const commitAuthors = repo.ref
+          ? repo.ref.target.history.nodes.map(x => x.author)
+          : []
     const commitComments = repo.commitComments.nodes
     processed.commitAuthors = mergeContributions(users(commitAuthors))
       .sort(byCount)
