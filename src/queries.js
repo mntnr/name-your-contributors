@@ -67,7 +67,8 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
   const participantsQ = authoredWithReactionsQ
         .concat(edge('comments', {}, authoredWithReactionsQ))
 
-  const reviewQ = edge('reviews', {}, authoredQ)
+  const reviewQ = edge('reviews', {}, authoredQ
+        .concat(edge('comments', {}, authoredWithReactionsQ)))
 
   const prsQ = edge('pullRequests', {},
     issueBits.concat(participantsQ.concat(reviewQ))
