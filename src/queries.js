@@ -5,7 +5,7 @@ const node = graphql.queryNode
 const noid = graphql.queryNoid
 const edge = graphql.queryEdge
 const val = graphql.queryLeaf
-const typedNode = graphql.queryType
+const typeSwitch = graphql.queryType
 
 /// //
 // Queries
@@ -20,7 +20,7 @@ const userInfo = node('user', {}, [
 ])
 
 const authoredQ = [
-  typedNode('author', {}, [
+  typeSwitch('author', {}, [
     ['User', [
       val('login'),
       val('name'),
@@ -33,7 +33,11 @@ const authoredQ = [
   val('createdAt')
 ]
 
-const reactorQ = edge('reactions', {}, [userInfo, val('createdAt')])
+const reactorQ = edge('reactions', {}, [
+  userInfo,
+  val('createdAt'),
+  val('content')
+])
 
 const commitAuthorQ = noid('author', {}, [userInfo])
 
@@ -48,9 +52,10 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
   const a = after.toISOString()
 
   const masterCommits = node('ref', {qualifiedName: 'refs/heads/master'}, [
-    typedNode('target', {}, [
+    typeSwitch('target', {}, [
       ['Commit', [
-        edge('history', {since: a, until: b}, [commitAuthorQ], true)
+        edge('history', {since: a, until: b},
+             [commitAuthorQ, val('committedDate')])
       ]]
     ])
   ])
@@ -70,9 +75,7 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
 
   const issuesQ = edge('issues', {}, issueBits.concat(participantsQ))
 
-  const commitCommentQ = edge('commitComments', {}, [
-    authoredWithReactionsQ
-  ])
+  const commitCommentQ = edge('commitComments', {}, authoredWithReactionsQ)
 
   const children = [
     prsQ,
@@ -109,15 +112,17 @@ const orgRepos = (name, before, after, commits, reactions) =>
 // Data Filtering (co-queries if you will)
 /// //
 
+const within = (obj, before, after) => {
+  const date = new Date(obj.createdAt)
+  return after <= date && date <= before
+}
+
 /** Returns a function that when given an array of objects with createAt keys,
   * returns an array containing only those objects created between before and
   * after.
   */
 const timeFilter = (before, after) =>
-      data => data.filter(x => {
-        const date = new Date(x.createdAt)
-        return after <= date && date <= before
-      })
+      data => data.filter(x => within(x, before, after))
 
 const users = arr =>
       arr.map(x => x.author || x.user)
@@ -231,16 +236,87 @@ const orgSynopsis = ({
     }))
 }
 
-const filterOrg = (json, tf) => json
-const filterRepo = (json, tf) => json
-
-const timeFilterFullTree = (before, after, json) => {
+const filterRepo = (json, before, after) => {
   const tf = timeFilter(before, after)
+  const repo = json.repository
+  const commentFilter = comments => comments.map(comment => {
+    if (comment.reactions) {
+      comment.reactions = tf(comment.reactions)
+    }
+    if (!comment.reactions || comment.reactions.length === 0) {
+      if (!within(comment, before, after)) {
+        return null
+      }
+    }
+    return comment
+  }).filter(x => x != null)
 
-  if (json.organisation) {
-    return filterOrg(json, tf)
+  const issues = repo.issues.map(issue => {
+    const comments = commentFilter(issue.comments)
+
+    if (comments.length === 0 && !within(issue, before, after)) {
+      return null
+    } else {
+      issue.comments = comments
+      return issue
+    }
+  }).filter(x => x != null)
+
+  const prs = repo.pullRequests.map(pr => {
+    const comments = commentFilter(pr.comments)
+    const reviews = commentFilter(pr.reviews)
+
+    if (comments.length === 0 &&
+        reviews.length === 0 &&
+        !within(pr, before, after)) {
+      return null
+    } else {
+      pr.comments = comments
+      pr.reviews = reviews
+      return pr
+    }
+  }).filter(x => x != null)
+
+  const commits = repo.ref
+        ? repo.ref.target.history
+        : []
+
+  let commitComments = []
+  if (repo.commitComments) {
+    commitComments = commentFilter(repo.commitComments)
+  }
+
+  if (issues.length === 0 &&
+      prs.length === 0 &&
+      commits.length === 0 &&
+      commitComments.length === 0) {
+    return null
+  }
+  repo.issues = issues
+  repo.pullRequests = prs
+
+  if (repo.commitComments) {
+    repo.commitcomments = commitComments
+  }
+
+  return json
+}
+
+const filterOrg = (json, before, after) => {
+  const org = json.organization
+  const repos = org.repositories.map(repo => {
+    return filterRepo({repository: repo}, before, after)
+  }).filter(x => x != null)
+  .map(x => x.repository)
+  json.organization.repositories = repos
+  return json
+}
+
+const timeFilterFullTree = (json, before, after) => {
+  if (json.organization) {
+    return filterOrg(json, before, after)
   } else {
-    return filterRepo(json, tf)
+    return filterRepo(json, before, after)
   }
 }
 

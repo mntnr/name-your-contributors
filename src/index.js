@@ -103,6 +103,8 @@ const repoContributors = ({
     token,
     debug,
     dryRun,
+    before,
+    after,
     verbose,
     name: `${user}/${repo}`,
     query: queries.repository(repo, user, before, after, commits, reactions)
@@ -136,6 +138,8 @@ const orgContributors = ({
   return qfn({
     token,
     debug,
+    before,
+    after,
     dryRun,
     verbose,
     name: orgName,
