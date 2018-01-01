@@ -1,6 +1,13 @@
 'use strict'
 
 const https = require('https')
+const crypto = require('crypto')
+
+const sha1sum = s => {
+  const d = crypto.createHash('sha1')
+  d.update(s)
+  return d.digest('hex')
+}
 
 // -----
 // Query Builder DSL
@@ -371,7 +378,7 @@ let reqCounter = 1
 
 /** Verbose and debug logging middleware. */
 const logResponse = (queryName, verbose, debug) => res => {
-  const {query, json, headers} = res
+  const {query, json, headers, cacheHit} = res
 
   if (debug) {
     console.log(`#${reqCounter++} [${queryName}]:
@@ -383,8 +390,12 @@ Response body:
 ${JSON.stringify(json, null, 2)}
 `)
   } else if (verbose) {
-    console.log(`#${reqCounter++} [${queryName}]:
+    if (cacheHit) {
+      console.log(`#${reqCounter++}: Retrieved fom Cache`)
+    } else {
+      console.log(`#${reqCounter++} [${queryName}]:
   ${JSON.stringify(json.rateLimit)}`)
+    }
   }
 
   return res
@@ -441,6 +452,14 @@ const runQueue = () => {
   }
 }
 
+let caching = 0
+
+const cache = require('persistent-cache')({
+  base: 'cache',
+  name: 'nyc-local',
+  duration: 24 * 60 * 60 * 1000
+})
+
 /** Enqueue request to be handled by executor. */
 const executeOnQueue = args =>
       new Promise((resolve, reject) => {
@@ -457,7 +476,24 @@ const executeOnQueue = args =>
   * @param {bool}      debug   - Debug mode: VERY verbose logging.
   * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
   */
-const rawResponse = args => executeOnQueue(args)
+const rawResponse = args => {
+  return new Promise((resolve, reject) => {
+    const key = sha1sum(queryWithCost(args.query, args.dryRun))
+    cache.get(key, async (err, response) => {
+      if (err || !response) {
+        const res = await executeOnQueue(args)
+        resolve(res)
+        caching++
+        cache.put(key, res, x => {
+          caching--
+        })
+      } else {
+        response.cacheHit = true
+        resolve(response)
+      }
+    })
+  })
+}
 
 const initialRequest = args =>
       rawResponse(args)
@@ -493,7 +529,7 @@ const prune = args => execute(args).then(json => pruneTree(json, args.query))
 /** Returns true iff all asyncronous processes have terminated and it is safe to
   * shut down the system.
   */
-const done = () => !running && queue.length === 0
+const done = () => !running && queue.length === 0 && caching === 0
 
 module.exports = {
   execute,
