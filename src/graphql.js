@@ -612,6 +612,7 @@ module.exports = {
   execute,
   prune,
   done,
+  cache,
   queryNode,
   queryNoid,
   queryLeaf,

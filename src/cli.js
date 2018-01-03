@@ -4,6 +4,7 @@
 const meow = require('meow')
 const main = require('./index')
 const done = require('./graphql').done
+const cache = require('./graphql').cache
 
 const cli = meow([`
   Usage
@@ -28,6 +29,8 @@ const cli = meow([`
     --local-dir   - If specified, this script will look for repos being queried in
                     the provided dir and read the commit log from them directly.
     --reactions   - Query reactions of comments as well.
+
+    --wipe-cache  - Wipe local cache before starting query.
 
     -v, --verbose - Enable verbose logging
     --debug       - Enable extremely verbose logging
@@ -60,6 +63,15 @@ const token = cli.flags.t || process.env.GITHUB_TOKEN
 
 const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
 const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
+
+if (cli.flags.wipeCache) {
+  if (cli.flags.v) {
+    console.log('Wiping cache')
+  }
+  for (const key of cache.keysSync()) {
+    cache.deleteSync(key)
+  }
+}
 
 const defaultOpts = opts => {
   opts.before = before
