@@ -415,23 +415,91 @@ const parseResponse = args => {
   }
 }
 
-let running = false
+const abusive = e => {
+  return e.statusCode === 403 && !e.headers['x-ratelimit-remaining']
+}
+
+const rateLimited = e => {
+  const rem = e && e.headers && e.headers['x-ratelimit-remaining']
+  return rem && e.statusCode === 403
+}
+
+const untilReset = e => {
+  const now = Date.now()
+  const then = e.headers['x-ratelimit-reset'] + '000'
+
+  return parseInt(then) - now
+}
+
+let running = 0
+const maxConcurrent = 10
+
+let locked = false
 
 let lastMinute = 0
 const maxPerMinute = 300
 
 const queue = []
 
-/** Request pool executor. Sends the next network request if resources permit.
-  */
+const tryRun = queue => {
+  const {args, resolve, reject} = queue[0]
+  const req = queryRequest(args)
+
+  req.then(x => {
+    resolve(req)
+    queue.shift()
+    process.nextTick(runQueue)
+    running--
+  }).catch(e => {
+    if (abusive(e)) {
+      const wait = parseInt(e.headers['retry-after']) * 1000
+
+      if (!locked && (args.verbose || args.debug)) {
+        console.log(`Abuse alarm triggered. Retrying in ${wait}ms.`)
+      }
+
+      locked = true
+      setTimeout(() => {
+        running--
+        if (locked) {
+          locked = false
+          runQueue()
+        }
+      }, wait)
+    } else if (rateLimited(e)) {
+      const rem = untilReset(e)
+
+      if (!locked && (args.verbose || args.debug)) {
+        console.log(`Rate limit reached. Sleeping until it resets in ${rem}ms.`)
+      }
+
+      locked = true
+      setTimeout(() => {
+        running--
+        if (locked) {
+          locked = false
+          runQueue()
+        }
+      }, rem)
+    } else {
+      reject(e)
+
+      queue.shift()
+      running--
+      process.nextTick(runQueue)
+    }
+  })
+}
+
+/** Request pool executor. Sends the next network request if resources permit. */
 const runQueue = () => {
-  if (running) {
+  if (running > maxConcurrent) {
     // noop
   } else if (lastMinute >= maxPerMinute) {
     setTimeout(runQueue, 1000)
   } else {
     if (queue.length > 0) {
-      running = true
+      running++
       lastMinute++
       setTimeout(() => lastMinute--, 60000)
 
@@ -448,7 +516,7 @@ const runQueue = () => {
         reject(e)
       })
 
-      resolve(req)
+      tryRun(queue)
     }
   }
 }
@@ -534,7 +602,11 @@ const prune = args => execute(args).then(json => pruneTree(json, args.query))
 /** Returns true iff all asyncronous processes have terminated and it is safe to
   * shut down the system.
   */
-const done = () => !running && queue.length === 0 && caching === 0
+const done = () =>
+      running === 0 &&
+      !locked &&
+      queue.length === 0 &&
+      caching === 0
 
 module.exports = {
   execute,
