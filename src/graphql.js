@@ -481,12 +481,16 @@ const rawResponse = args => {
     const key = sha1sum(queryWithCost(args.query, args.dryRun))
     cache.get(key, async (err, response) => {
       if (err || !response) {
-        const res = await executeOnQueue(args)
-        resolve(res)
-        caching++
-        cache.put(key, res, x => {
-          caching--
-        })
+        try {
+          const res = await executeOnQueue(args)
+          resolve(res)
+          caching++
+          cache.put(key, res, x => {
+            caching--
+          })
+        } catch (e) {
+          reject(e)
+        }
       } else {
         response.cacheHit = true
         resolve(response)
