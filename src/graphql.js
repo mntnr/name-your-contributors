@@ -355,13 +355,14 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
               headers: res.headers
             })
           } else {
-            console.error({
+            /*eslint-disable*/
+            reject({
               statusCode: res.statusCode,
               statusMessage: res.statusMessage,
               headers: res.headers,
               responseBody: queryResponse
             })
-            reject(new Error(res.statusMessage))
+            /*eslint-enable*/
           }
         })
       })
