@@ -420,8 +420,9 @@ const abusive = e => {
 }
 
 const rateLimited = e => {
+  const body = JSON.parse(e.body)
   const rem = e && e.headers && e.headers['x-ratelimit-remaining']
-  return rem && e.statusCode === 403
+  return e.status === 200 && body.data === null && rem && parseInt(rem) === 0
 }
 
 const untilReset = e => {
@@ -446,10 +447,27 @@ const tryRun = queue => {
   const req = queryRequest(args)
 
   req.then(x => {
-    resolve(req)
-    queue.shift()
-    process.nextTick(runQueue)
-    running--
+    if (rateLimited(x)) {
+      const rem = untilReset(x)
+
+      if (!locked && (args.verbose || args.debug)) {
+        console.log(`Rate limit reached. Sleeping until it resets in ${rem}ms.`)
+      }
+
+      locked = true
+      setTimeout(() => {
+        running--
+        if (locked) {
+          locked = false
+          runQueue()
+        }
+      }, rem)
+    } else {
+      resolve(req)
+      queue.shift()
+      process.nextTick(runQueue)
+      running--
+    }
   }).catch(e => {
     if (abusive(e)) {
       const wait = parseInt(e.headers['retry-after']) * 1000
@@ -466,21 +484,6 @@ const tryRun = queue => {
           runQueue()
         }
       }, wait)
-    } else if (rateLimited(e)) {
-      const rem = untilReset(e)
-
-      if (!locked && (args.verbose || args.debug)) {
-        console.log(`Rate limit reached. Sleeping until it resets in ${rem}ms.`)
-      }
-
-      locked = true
-      setTimeout(() => {
-        running--
-        if (locked) {
-          locked = false
-          runQueue()
-        }
-      }, rem)
     } else {
       reject(e)
 
