@@ -433,7 +433,7 @@ const untilReset = e => {
 }
 
 let running = 0
-const maxConcurrent = 10
+const maxConcurrent = 1
 
 let locked = false
 
@@ -496,7 +496,7 @@ const tryRun = queue => {
 
 /** Request pool executor. Sends the next network request if resources permit. */
 const runQueue = () => {
-  if (running > maxConcurrent) {
+  if (running >= maxConcurrent) {
     // noop
   } else if (lastMinute >= maxPerMinute) {
     setTimeout(runQueue, 1000)
