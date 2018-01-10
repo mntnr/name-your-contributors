@@ -70,6 +70,9 @@ const queryRoot = ({name, args, children, type}) => {
   return item
 }
 
+/** Represents a leaf in the query tree.
+  * @param name - property name to query
+  */
 const queryLeaf = name => queryRoot({
   name,
   args: {},
@@ -77,6 +80,9 @@ const queryLeaf = name => queryRoot({
   type: 'leaf'
 })
 
+/** Returns a query node for a property that has no ID. This is necessary due to
+  * idiosyncronicities in certain GraphL schemata.
+  */
 const queryNoid = (name, args, children) => queryRoot({
   name,
   args,
@@ -84,6 +90,11 @@ const queryNoid = (name, args, children) => queryRoot({
   type: 'noid'
 })
 
+/** Returns a standard interal node of a query.
+  * @param name     - property name
+  * @param args     - arguments to pass with node
+  * @param children - subqueries beneath this node.
+  */
 const queryNode = (name, args, children) => queryRoot({
   name,
   args,
@@ -98,6 +109,9 @@ const pagination = queryRoot({
   type: 'pagination meta'
 })
 
+/** Returns a query node that knows it traverses an edge. This makes automatic
+  * depagination and result walking possible. Same signature as queryNode.
+  */
 const queryEdge = (name, args, children) => {
   args.first = args.first || 1
 
@@ -112,6 +126,14 @@ const queryEdge = (name, args, children) => {
 const queryOn = (type, children) =>
       queryNode(`... on ${type}`, {}, children)
 
+/** Returns a branching typecasting query node. Necessary for any node in an API
+  * that returns an interface.
+  * @param name  - property name
+  * @param args  - property args
+  * @param types - an array of arrays, each of which is of the form [type,
+  *                children] where the children are valid subqueries for the
+  *                type in question.
+  */
 const queryType = (name, args, types) => {
   const children = types.map(([type, children]) => queryOn(type, children))
   return queryRoot({
@@ -127,6 +149,8 @@ const queryType = (name, args, types) => {
 // -----
 
 // Kludgy non-destructive assoc
+/** Returns a shallow copy of o with o[k] = v (and optionally o[k2] = v2).
+  */
 const assoc = (o, k, v, k2, v2) => {
   const out = {}
   Object.assign(out, o)
@@ -137,15 +161,23 @@ const assoc = (o, k, v, k2, v2) => {
   return out
 }
 
-const find = (l, k) => {
+/** Find object o with o.name = name in given list. Throws an exception if no
+  * object found.
+  * @param l    array of objects
+  * @param name name to query
+  */
+const find = (l, name) => {
   for (const o of l) {
-    if (o.name === k) {
+    if (o.name === name) {
       return o
     }
   }
-  throw new Error(`Could not find ${k} in ${l}`)
+  throw new Error(`Could not find ${name} in ${l}`)
 }
 
+/** Checks cursor to see if there are more pages to the current query
+  * edge. Returns a promise which will yield all nodes in the edge.
+  */
 const fetchAll = async (reqargs, query, cursor, id, type) => {
   const args = assoc(query.args, 'first', 100, 'after', cursor)
   const q = queryType('node', {id: id}, [
@@ -210,6 +242,9 @@ const depWalk = async (args, query, response) => {
   }
 }
 
+/** Returns a promise which will yield response with all edges replaced by
+  * fetched arrays of results.
+  */
 const depaginate = args => async response => {
   await depWalk(args, args.query, response.json, null)
   return response
@@ -252,6 +287,10 @@ const cleanwalk = (json, query) => {
   }
 }
 
+/** Given a json response from and original query, returns the response with
+  * internal bookkeeping (rate limit info, pagination data, unasked for IDs)
+  * removed.
+  */
 const pruneTree = (json, query) => {
   cleanwalk(json, query)
   delete json.rateLimit
@@ -266,12 +305,12 @@ const pruneTree = (json, query) => {
   * cost, in addition to the query itself. Optionally prevents the query from
   * running.
   */
-const queryCost = (item, dryRun) => '{"query": ' +
+const queryWithCost = (item, dryRun) => '{"query": ' +
       JSON.stringify(
         `query{rateLimit(dryRun: ${Boolean(dryRun)}){cost, remaining, resetAt}\n` +
           item.toString() + '}') + '}'
 
-/** Inner query executor.
+/** Inner query dispatch.
 
     Same params as execute.
     Returns the raw HTTP response body.
@@ -286,7 +325,7 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
       'Authorization': `bearer ${token}`
     }
 
-    const runQ = queryCost(query, dryRun)
+    const runQ = queryWithCost(query, dryRun)
 
     const req = https.request(
       {
@@ -330,6 +369,7 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
 // Number requests for reference.
 let reqCounter = 1
 
+/** Verbose and debug logging middleware. */
 const logResponse = (queryName, verbose, debug) => res => {
   const {query, json, headers} = res
 
@@ -350,6 +390,9 @@ ${JSON.stringify(json, null, 2)}
   return res
 }
 
+/** Parses response as json and adds it args. Returns args. Signals an error if
+  * the reponse is not valid.
+  */
 const parseResponse = args => {
   const json = JSON.parse(args.body)
   if (json.data) {
@@ -367,6 +410,8 @@ const maxPerMinute = 300
 
 const queue = []
 
+/** Request pool executor. Sends the next network request if resources permit.
+  */
 const runQueue = () => {
   if (running) {
     // noop
@@ -378,7 +423,7 @@ const runQueue = () => {
       lastMinute++
       setTimeout(() => lastMinute--, 60000)
 
-      const {args, resolve} = queue.shift()
+      const {args, resolve, reject} = queue.shift()
       const req = queryRequest(args)
 
       req.then(x => {
@@ -386,13 +431,17 @@ const runQueue = () => {
         running = false
       })
 
+      req.catch(e => {
+        running = false
+        reject(e)
+      })
+
       resolve(req)
     }
   }
 }
 
-const done = () => !running && queue.length === 0
-
+/** Enqueue request to be handled by executor. */
 const executeOnQueue = args =>
       new Promise((resolve, reject) => {
         queue.push({args, resolve, reject})
@@ -400,7 +449,7 @@ const executeOnQueue = args =>
       })
 
 /**
-  * Returns a promise which will yield a query result.
+  * Returns a promise which will yield a query result string.
   * @param {string}    token   - Github auth token.
   * @param {queryNode} query   - The query to execute.
   * @param {string}    name    - Name of this query. For debugging only.
@@ -415,11 +464,36 @@ const initialRequest = args =>
       .then(parseResponse)
       .then(logResponse(args.name, args.verbose, args.debug))
 
-const execute = args => initialRequest(args)
+/**
+  * Returns a promise which will yield the query result as depaginated JSON.
+  * @param {string}    token   - Github auth token.
+  * @param {queryNode} query   - The query to execute.
+  * @param {string}    name    - Name of this query. For debugging only.
+  * @param {bool}      verbose - Enable verbose logging.
+  * @param {bool}      debug   - Debug mode: VERY verbose logging.
+  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
+  */
+const execute = args =>
+      initialRequest(args)
       .then(depaginate(args))
       .then(x => x.json)
 
+/**
+  * Returns a promise which will yield the query result as depaginated JSON with
+  * internal bookeeping logic stripped out.
+  * @param {string}    token   - Github auth token.
+  * @param {queryNode} query   - The query to execute.
+  * @param {string}    name    - Name of this query. For debugging only.
+  * @param {bool}      verbose - Enable verbose logging.
+  * @param {bool}      debug   - Debug mode: VERY verbose logging.
+  * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
+  */
 const prune = args => execute(args).then(json => pruneTree(json, args.query))
+
+/** Returns true iff all asyncronous processes have terminated and it is safe to
+  * shut down the system.
+  */
+const done = () => !running && queue.length === 0
 
 module.exports = {
   execute,

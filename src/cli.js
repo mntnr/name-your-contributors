@@ -93,9 +93,10 @@ const formatReturn = x => {
   }
 }
 
-const cleanup = () => {
+/** Wait for outstanding requests to resolve and shut down the program. */
+const cleanup = ret => {
   if (done()) {
-    process.exit(0)
+    process.exit(ret)
   } else {
     setTimeout(cleanup, 1000)
   }
@@ -103,12 +104,12 @@ const cleanup = () => {
 
 const handleOut = res => {
   console.log(res)
-  cleanup()
+  cleanup(0)
 }
 
 const handleError = e => {
   console.error(e.stack)
-  process.exit(1)
+  cleanup(1)
 }
 
 const handle = (f, opts) =>

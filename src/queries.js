@@ -101,6 +101,7 @@ const repository = (repoName, ownerName, before, after, commits, reactions) =>
 const repositories = (before, after, commits, reactions) =>
       edge('repositories', {}, repoSubQuery(before, after, commits, reactions))
 
+/** Returns a query to retrieve all contributors to an org. */
 const orgRepos = (name, before, after, commits, reactions) =>
       node('organization', {login: name}, [
         repositories(before, after, commits, reactions),
@@ -113,6 +114,7 @@ const orgRepos = (name, before, after, commits, reactions) =>
 // Data Filtering (co-queries if you will)
 /// //
 
+/** Returns true iff obj.createdAt is between before and after. */
 const within = (obj, before, after) => {
   const date = new Date(obj.createdAt)
   return after <= date && date <= before
@@ -164,6 +166,9 @@ const mergeContributions = xs => {
 
 const byCount = (a, b) => b.count - a.count
 
+/** Produces a synopsis (the canonical output of name-your-contributors) of
+  * contributions to the given repo between before and after.
+  */
 const repoSynopsis = ({json, before, after, commits, reactions}) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
@@ -237,6 +242,8 @@ const orgSynopsis = ({
     }))
 }
 
+/** Walks repo query result and strips out entries not between before and after.
+  */
 const filterRepo = (json, before, after) => {
   const tf = timeFilter(before, after)
   const repo = json.repository
@@ -303,6 +310,8 @@ const filterRepo = (json, before, after) => {
   return json
 }
 
+/** Walks org return JSON and strips out entries not between before and after.
+  */
 const filterOrg = (json, before, after) => {
   const org = json.organization
   const repos = org.repositories.map(repo => {
@@ -313,6 +322,7 @@ const filterOrg = (json, before, after) => {
   return json
 }
 
+/** Returns json with entires in in [before, after] stripped out. */
 const timeFilterFullTree = (json, before, after) => {
   if (json.organization) {
     return filterOrg(json, before, after)
