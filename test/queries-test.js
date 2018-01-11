@@ -60,3 +60,98 @@ test('null users get filtered', t => {
   const ulist = [{author: {login: 'me', name: 'just me'}}, {author: null}]
   t.deepEqual(q.users(ulist), [{login: 'me', name: 'just me', count: 1}])
 })
+
+const tree = {
+  'repository': {
+    'homepageUrl': '',
+    'name': 'name-your-contributors',
+    'owner': {
+      'login': 'mntnr'
+    },
+    'pullRequests': [
+      {
+        'title': 'Cli updates',
+        'number': 43,
+        'state': 'MERGED',
+        'author': {
+          'login': 'tgetgood',
+          'name': 'Thomas Getgood',
+          'url': 'https://github.com/tgetgood'
+        },
+        'createdAt': '2017-10-26T19:48:39Z',
+        'comments': [
+          {
+            'author': {
+              'login': 'RichardLitt',
+              'name': 'Richard Littauer',
+              'url': 'https://github.com/RichardLitt'
+            },
+            'createdAt': '2017-11-20T16:35:31Z'
+          },
+          {
+            'author': {
+              'login': 'tgetgood',
+              'name': 'Thomas Getgood',
+              'url': 'https://github.com/tgetgood'
+            },
+            'createdAt': '2017-11-21T21:05:15Z'
+          },
+          {
+            'author': {
+              'login': 'RichardLitt',
+              'name': 'Richard Littauer',
+              'url': 'https://github.com/RichardLitt'
+            },
+            'createdAt': '2017-11-22T10:50:51Z'
+          },
+          {
+            'author': {
+              'login': 'tgetgood',
+              'name': 'Thomas Getgood',
+              'url': 'https://github.com/tgetgood'
+            },
+            'createdAt': '2017-11-22T15:47:46Z'
+          },
+          {
+            'author': {
+              'login': 'RichardLitt',
+              'name': 'Richard Littauer',
+              'url': 'https://github.com/RichardLitt'
+            },
+            'createdAt': '2017-11-22T15:58:52Z'
+          },
+          {
+            'author': {
+              'login': 'tgetgood',
+              'name': 'Thomas Getgood',
+              'url': 'https://github.com/tgetgood'
+            },
+            'createdAt': '2017-11-24T01:53:14Z'
+          },
+          {
+            'author': {
+              'login': 'RichardLitt',
+              'name': 'Richard Littauer',
+              'url': 'https://github.com/RichardLitt'
+            },
+            'createdAt': '2017-11-27T17:52:07Z'
+          }
+        ],
+        'reviews': []
+      }
+    ],
+    'issues': []
+  }
+}
+
+test('time filtering in full mode', t => {
+  const before = new Date('2017-11-23')
+  const after = new Date('2017-11-21')
+  const out = q.timeFilterFullTree(tree, before, after)
+  t.is(out.repository.pullRequests[0].comments.length, 4)
+})
+
+test('Recursive filtering in full mode', t => {
+  const date = new Date('2017-11-10')
+  t.is(q.timeFilterFullTree(tree, date, date), null)
+})

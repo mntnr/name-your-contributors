@@ -197,6 +197,90 @@ $ name-your-contributors -u mntnr -r name-your-contributors --after 2017-11-10
 }
 ```
 
+### Result formats
+
+Name Your Contributors offers 4 distinct result formats intended for different
+consumers.
+
+#### Default
+
+The default result format is an aggregate synopsis of all contributions in the
+given time window. This is the format in the examples above.
+
+#### CSV
+
+With the `--csv` flag provided at the command line, nyc will return the default
+info in CSV format rather than JSON.
+
+#### Full Contribution Tree
+
+If the `--full` flag is passed at the command line, then nyc will return the
+full tree of org->repo->pr->comment->reaction->author for all interactions in
+the given time window. This format is quite verbose, but invaluable if you want
+to know not only who contributed, but the details of every contribution made.
+
+For example,
+```sh
+$ name-your-contributors -r name-your-contributors -u mntnr -b 2017-12-10 -a 2017-11-10 --full
+```
+will return (abbreviated):
+```sh
+{
+  "repository": {
+	"homepageUrl": "",
+	"name": "name-your-contributors",
+	"owner": {
+	  "login": "mntnr"
+	},
+	"pullRequests": [
+	  {
+		"title": "Cli updates",
+		"number": 43,
+		"state": "MERGED",
+		"author": {
+		  "login": "tgetgood",
+		  "name": "Thomas Getgood",
+		  "url": "https://github.com/tgetgood"
+		},
+		"createdAt": "2017-10-26T19:48:39Z",
+		"comments": [
+		  {
+			"author": {
+			  "login": "RichardLitt",
+			  "name": "Richard Littauer",
+			  "url": "https://github.com/RichardLitt"
+			},
+			"createdAt": "2017-11-20T16:35:31Z"
+		  },
+		  {
+			"author": {
+			  "login": "tgetgood",
+			  "name": "Thomas Getgood",
+			  "url": "https://github.com/tgetgood"
+			},
+			"createdAt": "2017-11-21T21:05:15Z"
+		  },
+		  ...
+		],
+		"reviews": []
+	  },
+	  ...
+	]
+  }
+}
+```
+
+Notice that the pull request above was created before the date passed to
+before. It is still included because comments made within it were created in the
+desired timeframe. If there had been no such comments, the PR would not be
+included.
+
+#### Condensed
+
+For an even more condensed output format which also allows filtering on given
+users, see the postprocessing script
+[Who Did What](https://github.com/mntnr/whodidwhat).
+
 ## API
 
 ### orgContributors({orgName, token, before, after})

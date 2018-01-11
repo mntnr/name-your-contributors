@@ -75,15 +75,6 @@ test('Contributors before a fixed date remain static', t => {
   })
 })
 
-test('Queries without tokens get rejected', t => {
-  return main.repoContributors({
-    user: 'mntnr',
-    repo: 'name-your-contributors',
-    before: new Date(),
-    after: new Date(0)
-  }).catch(error => t.is(error.message, 'Unauthorized'))
-})
-
 test('All sorts of valid GitHub URLS', async t => {
   /* eslint-disable */
   // Need to test tabs...
