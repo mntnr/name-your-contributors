@@ -37,7 +37,8 @@
   ],
   "dependencies": {
     "csv-writer": "0.0.3",
-    "meow": "^3.7.0"
+    "meow": "^3.7.0",
+    "persistent-cache": "^1.1.1"
   },
   "devDependencies": {
     "ava": "^0.23.0",
