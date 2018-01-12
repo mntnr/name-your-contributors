@@ -18,8 +18,9 @@ $ npm install --save name-your-contributors
 
 You also need to get a GitHub application token to access the API. Go here:
 https://github.com/settings/tokens. Click on "Generate New Token". It needs to
-have the `read:org` scope in order to search by organization. Name the token
-something informative: `name-your-contributors` is a good name.
+have the `read:org` and the `user:email` scopes in order to function
+properly. Name the token something informative: `name-your-contributors` is a
+good name.
 
 Set the token with the variable name `$GITHUB_TOKEN` before running the script:
 

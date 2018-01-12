@@ -13,19 +13,19 @@ const typeSwitch = graphql.queryType
 
 const whoAmI = node('viewer', {}, ['login'])
 
-const userInfo = node('user', {}, [
+const userFields = [
   val('login'),
   val('name'),
+  val('email'),
+  val('avatarUrl'),
   val('url')
-])
+]
+
+const userInfo = node('user', {}, userFields)
 
 const authoredQ = [
   typeSwitch('author', {}, [
-    ['User', [
-      val('login'),
-      val('name'),
-      val('url')
-    ]],
+    ['User', userFields],
     ['Bot', [
       val('login')
     ]]
