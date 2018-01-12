@@ -120,7 +120,7 @@ const handleOut = res => {
 }
 
 const handleError = e => {
-  console.error(e.stack)
+  console.error(e)
   cleanup(1)
 }
 

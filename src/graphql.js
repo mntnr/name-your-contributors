@@ -506,19 +506,6 @@ const runQueue = () => {
       lastMinute++
       setTimeout(() => lastMinute--, 60000)
 
-      const {args, resolve, reject} = queue.shift()
-      const req = queryRequest(args)
-
-      req.then(x => {
-        process.nextTick(runQueue)
-        running = false
-      })
-
-      req.catch(e => {
-        running = false
-        reject(e)
-      })
-
       tryRun(queue)
     }
   }
