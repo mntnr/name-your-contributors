@@ -81,13 +81,13 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
   const children = [
     prsQ,
     issuesQ,
+    commitCommentQ,
     val('homepageUrl'),
     val('name'),
     node('owner', {}, [val('login')])
   ]
 
   if (commits) {
-    children.push(commitCommentQ)
     children.push(masterCommits)
   }
   return children
