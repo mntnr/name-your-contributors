@@ -16,9 +16,9 @@ $ npm install --save name-your-contributors
 
 ### API Limits and setting up a GitHub Token
 
-You also need to get a GitHub application token to access the API. Go here:
-https://github.com/settings/tokens. Click on "Generate New Token". It needs to
-have the `read:org` and the `user:email` scopes in order to function
+You also need to get a GitHub Personal Access token, you can
+[create one here](https://github.com/settings/tokens/new?description=name-your-contributors&scopes=read:org,user:email).
+It needs to have the `read:org` and the `user:email` scopes in order to function
 properly. Name the token something informative: `name-your-contributors` is a
 good name.
 
