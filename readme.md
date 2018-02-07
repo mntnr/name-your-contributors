@@ -1,7 +1,7 @@
 # name-your-contributors
 
 [![Greenkeeper badge](https://badges.greenkeeper.io/mntnr/name-your-contributors.svg)](https://greenkeeper.io/)
-
+[![npm version](https://badge.fury.io/js/name-your-contributors.svg)](https://badge.fury.io/js/name-your-contributors)
 [![Build Status](https://travis-ci.org/mntnr/name-your-contributors.svg?branch=master)](https://travis-ci.org/mntnr/name-your-contributors)
 
 > Name your GitHub contributors; get commits, issues, and comments
@@ -90,6 +90,50 @@ $ name-your-contributors -u mntnr -r name-your-contributors
 $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib.json
 
 $ name-your-contributors --config config.json > combined-out.json
+
+$ name-your-contributors --help
+
+  Name your GitHub contributors; get commits, issues, and comments
+
+  Usage
+    $ name-your-contributors <input> [opts]
+
+  Options
+    -t, --token   - GitHub auth token to use
+    -a, --after   - Get contributions after date
+    -b, --before  - Get contributions before data
+
+    -o, --org     - Search all repos within this organisation
+    -r, --repo    - Repository to search
+    -u, --user    - User to which repository belongs
+    -c, --config  - Operate from config file. In this mode only token, verbose, and
+                    debug flags apply.
+
+    --full        - Returns the full tree of contributions rather than the default
+                    synopsis.
+    --csv         - Output data in CSV format
+
+    --commits     - Get commit authors and comments from GitHub
+    --local-dir   - If specified, this script will look for repos being queried in
+                    the provided dir and read the commit log from them directly.
+    --reactions   - Query reactions of comments as well.
+
+    --wipe-cache  - Wipe local cache before starting query.
+
+    -v, --verbose - Enable verbose logging
+    --debug       - Enable extremely verbose logging
+    --dry-run     - Check the cost of the query without executing it.
+
+  Authentication
+    This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
+    this var is set to a valid GitHub oauth token. To create one see:
+    https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+  Examples
+    $ name-your-contributors -r ipfs -u ipfs --after=2016-01-15T00:20:24Z --before=2016-01-20T00:20:24Z
+
+    $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib-2017.json
+
+    $ name-your-contributors --config config.json > combined-out.json
 ```
 
 ### Config File
