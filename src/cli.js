@@ -6,7 +6,7 @@ const main = require('./index')
 const done = require('./graphql').done
 const cache = require('./graphql').cache
 
-const cli = meow([`
+const cli = meow(`
   Usage
     $ name-your-contributors <input> [opts]
 
@@ -46,16 +46,40 @@ const cli = meow([`
     $ name-your-contributors -o ipfs -a 2017-01-01 > ipfs-contrib-2017.json
 
     $ name-your-contributors --config config.json > combined-out.json
-`], {
-  alias: {
-    a: 'after',
-    b: 'before',
-    c: 'config',
-    r: 'repo',
-    t: 'token',
-    o: 'org',
-    u: 'user',
-    v: 'verbose'
+`, {
+  flags: {
+    after: {
+      type: 'string',
+      alias: 'a'
+    },
+    before: {
+      type: 'string',
+      alias: 'b'
+    },
+    config: {
+      type: 'string',
+      alias: 'c'
+    },
+    repo: {
+      type: 'string',
+      alias: 'r'
+    },
+    token: {
+      type: 'string',
+      alias: 't'
+    },
+    org: {
+      type: 'string',
+      alias: 'o'
+    },
+    user: {
+      type: 'string',
+      alias: 'u'
+    },
+    verbose: {
+      type: 'boolean',
+      alias: 'v'
+    }
   }
 })
 
