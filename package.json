@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "4.0.0",
+  "version": "0.0.0-semantically-released",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "mntnr/name-your-contributors",
