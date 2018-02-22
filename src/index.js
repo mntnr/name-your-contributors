@@ -40,6 +40,7 @@ const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
 // CSV Output
 //
 
+// TODO This doesn't work for commits
 const flatten = json => {
   const prs = json.prCreators.map(x => ['pr creator'].concat(x))
   const prcs = json.prCommentators.map(x => ['pr commentator'].concat(x))
