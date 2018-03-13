@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "ava": "^0.25.0",
-    "semantic-release": "^12.4.1",
+    "semantic-release": "^15.0.0",
     "standard": "^10.0.3",
     "travis-deploy-once": "^4.3.4"
   },
