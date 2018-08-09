@@ -38,7 +38,7 @@
     "contributing"
   ],
   "dependencies": {
-    "csv-writer": "1.0.0",
+    "csv-writer": "1.0.1",
     "meow": "^4.0.0",
     "persistent-cache": "^1.1.1"
   },
