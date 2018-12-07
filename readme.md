@@ -189,9 +189,11 @@ $ name-your-contributors --help
     --dry-run     - Check the cost of the query without executing it.
 
   Authentication
-    This script looks for an auth token in the env var GITHUB_TOKEN. Make sure
-    this var is set to a valid GitHub oauth token. To create one see:
-    https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+		This script looks for an auth token in the env var GITHUB_TOKEN. It needs
+		to have the read:org and the user:email scopes in order to function
+		properly. Make sure this var is set to a valid GitHub oauth token. To
+		create one see:
+		https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
   Examples
     $ name-your-contributors -r ipfs -u ipfs --after=2016-01-15T00:20:24Z --before=2016-01-20T00:20:24Z
 
