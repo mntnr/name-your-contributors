@@ -43,7 +43,7 @@
     "persistent-cache": "^1.1.1"
   },
   "devDependencies": {
-    "ava": "^0.25.0",
+    "ava": "^1.0.1",
     "semantic-release": "^15.0.0",
     "standard": "^11.0.0",
     "travis-deploy-once": "^5.0.0"
