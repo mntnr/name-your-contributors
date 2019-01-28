@@ -63,5 +63,6 @@
       "email": "richard.littauer@gmail.com",
       "url": "burntfen.com"
     }
-  ]
+  ],
+  "main": "src/index.js"
 }
