@@ -123,7 +123,10 @@ const nyc = require('name-your-contributors')
 nyc.repoContributors({
 	token: process.env.GITHUB_TOKEN,
 	user: 'mntnr',
-	repo: 'name-your-contributors'
+	repo: 'name-your-contributors',
+	// Below: known bug. See #85
+	before: new Date(),
+	after: new Date(0)
 	}).then(//do something with the results
 	)
 })
