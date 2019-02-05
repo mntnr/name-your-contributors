@@ -45,7 +45,7 @@ const childrenString = children => {
       console.error('Children must be an array. Instead we got:', children)
     }
     const s = children.map(item => item.toString())
-          .reduce((acc, next) => acc + next + '\n', '')
+      .reduce((acc, next) => acc + next + '\n', '')
     return '{' + s.substring(0, s.length - 1) + '}'
   }
 }
@@ -131,7 +131,7 @@ const queryEdge = (name, args, children) => {
 }
 
 const queryOn = (type, children) =>
-      queryNode(`... on ${type}`, {}, children)
+  queryNode(`... on ${type}`, {}, children)
 
 /** Returns a branching typecasting query node. Necessary for any node in an API
   * that returns an interface.
@@ -362,7 +362,7 @@ const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
               headers: res.headers,
               responseBody: queryResponse
             })
-            /*eslint-enable*/
+            /* eslint-enable */
           }
         })
       })
@@ -521,10 +521,10 @@ const cache = require('persistent-cache')({
 
 /** Enqueue request to be handled by executor. */
 const executeOnQueue = args =>
-      new Promise((resolve, reject) => {
-        queue.push({args, resolve, reject})
-        runQueue()
-      })
+  new Promise((resolve, reject) => {
+    queue.push({args, resolve, reject})
+    runQueue()
+  })
 
 /**
   * Returns a promise which will yield a query result string.
@@ -559,9 +559,9 @@ const rawResponse = args => {
 }
 
 const initialRequest = args =>
-      rawResponse(args)
-      .then(parseResponse)
-      .then(logResponse(args.name, args.verbose, args.debug))
+  rawResponse(args)
+    .then(parseResponse)
+    .then(logResponse(args.name, args.verbose, args.debug))
 
 /**
   * Returns a promise which will yield the query result as depaginated JSON.
@@ -573,9 +573,9 @@ const initialRequest = args =>
   * @param {bool}      dryRun  - Execute a dry run, check query but don't run.
   */
 const execute = args =>
-      initialRequest(args)
-      .then(depaginate(args))
-      .then(x => x.json)
+  initialRequest(args)
+    .then(depaginate(args))
+    .then(x => x.json)
 
 /**
   * Returns a promise which will yield the query result as depaginated JSON with
@@ -593,7 +593,7 @@ const prune = args => execute(args).then(json => pruneTree(json, args.query))
   * shut down the system.
   */
 const done = () =>
-      running === 0 &&
+  running === 0 &&
       !locked &&
       queue.length === 0 &&
       caching === 0

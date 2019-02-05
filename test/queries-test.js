@@ -39,9 +39,9 @@ test('time filtering <=', t => {
 
 test('merge', t => {
   const testusers = [{login: 'x', count: 1, name: 'x', url: 'x'},
-                     {login: 'y', count: 1, name: 'x', url: 'x'},
-                     {login: 'x', count: 3, name: 'x', url: 'x'},
-                     {login: 'z', count: 2, name: 'x', url: 'x'}]
+    {login: 'y', count: 1, name: 'x', url: 'x'},
+    {login: 'x', count: 3, name: 'x', url: 'x'},
+    {login: 'z', count: 2, name: 'x', url: 'x'}]
 
   t.deepEqual(q.mergeContributions(testusers), [
     {login: 'x', count: 4, name: 'x', url: 'x'},

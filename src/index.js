@@ -11,14 +11,14 @@ const fs = require('fs')
 //
 
 const shellOut = command =>
-      new Promise((resolve, reject) =>
-                  exec(command, (err, stdout, stderr) => {
-                    if (err) {
-                      reject(err)
-                    } else {
-                      resolve(stdout)
-                    }
-                  }))
+  new Promise((resolve, reject) =>
+    exec(command, (err, stdout, stderr) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(stdout)
+      }
+    }))
 
 const gitConfigCommand = 'git config --get remote.origin.url'
 
@@ -33,8 +33,8 @@ const parseGitURL = url => {
 }
 
 const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
-      .then(parseGitURL)
-      .then(x => { return {user: x[1], repo: x[2]} })
+  .then(parseGitURL)
+  .then(x => { return {user: x[1], repo: x[2]} })
 
 //
 // CSV Output
@@ -58,13 +58,13 @@ const toCSV = json => {
 }
 
 const verifyResultHasKey = (key, query, dryRun) =>
-      x => {
-        if (!dryRun && x[key] == null) {
-          throw new Error(`Bad query: ${key} '${query}' does not exist`)
-        } else {
-          return x
-        }
-      }
+  x => {
+    if (!dryRun && x[key] == null) {
+      throw new Error(`Bad query: ${key} '${query}' does not exist`)
+    } else {
+      return x
+    }
+  }
 
 //
 // Config File Parsing
@@ -74,7 +74,7 @@ const verifyResultHasKey = (key, query, dryRun) =>
 //
 
 const prunedFetch = args => graphql.prune(args)
-      .then(json => queries.timeFilterFullTree(json, args.before, args.after))
+  .then(json => queries.timeFilterFullTree(json, args.before, args.after))
 
 /** Returns all contributions to a repo.
   * @param token  - GitHub auth token
@@ -87,15 +87,15 @@ const repoContributors = ({
   token, user, repo, before, after, debug, dryRun, verbose, commits, reactions, full
 }) => {
   const summarize = args =>
-        graphql.execute(args)
-        .then(verifyResultHasKey('repository', user + '/' + repo, dryRun))
-        .then(json => {
-          if (dryRun) {
-            return json
-          } else {
-            return queries.repoSynopsis({json, before, after, commits, reactions})
-          }
-        })
+    graphql.execute(args)
+      .then(verifyResultHasKey('repository', user + '/' + repo, dryRun))
+      .then(json => {
+        if (dryRun) {
+          return json
+        } else {
+          return queries.repoSynopsis({json, before, after, commits, reactions})
+        }
+      })
 
   const qfn = full ? prunedFetch : summarize
 
@@ -121,17 +121,17 @@ const orgContributors = ({
   token, orgName, before, after, debug, dryRun, verbose, commits, reactions, full
 }) => {
   const summarise = args =>
-        graphql.execute(args)
-        .then(verifyResultHasKey('organization', orgName, dryRun))
-        .then(json => {
-          if (dryRun) {
-            return json
-          } else {
-            return queries.orgSynopsis({
-              json, before, after, commits, reactions
-            })
-          }
-        })
+    graphql.execute(args)
+      .then(verifyResultHasKey('organization', orgName, dryRun))
+      .then(json => {
+        if (dryRun) {
+          return json
+        } else {
+          return queries.orgSynopsis({
+            json, before, after, commits, reactions
+          })
+        }
+      })
 
   const qfn = full ? prunedFetch : summarise
 
@@ -213,10 +213,10 @@ const fromConfig = async ({
  * @param token - GitHub Auth token
  */
 const currentUser = token =>
-      graphql.execute({
-        token,
-        query: queries.whoAmI
-      }).then(queries.cleanWhoAmI)
+  graphql.execute({
+    token,
+    query: queries.whoAmI
+  }).then(queries.cleanWhoAmI)
 
 module.exports = {
   toCSV,

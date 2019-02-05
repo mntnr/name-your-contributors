@@ -150,11 +150,9 @@ const handleError = e => {
   cleanup(1)
 }
 
-const handle = (f, opts) =>
-     f(opts).then(formatReturn).then(handleOut).catch(handleError)
+const handle = (f, opts) => f(opts).then(formatReturn).then(handleOut).catch(handleError)
 
-const fetchRepo = (user, repo) =>
-      handle(main.repoContributors, defaultOpts({user, repo}))
+const fetchRepo = (user, repo) => handle(main.repoContributors, defaultOpts({user, repo}))
 
 if (cli.flags.c) {
   const opts = defaultOpts({file: cli.flags.c})

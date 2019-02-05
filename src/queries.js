@@ -55,20 +55,20 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
     typeSwitch('target', {}, [
       ['Commit', [
         edge('history', {since: a, until: b},
-             [commitAuthorQ, val('committedDate')])
+          [commitAuthorQ, val('committedDate')])
       ]]
     ])
   ])
 
   const authoredWithReactionsQ = reactionsInQuery
-        ? authoredQ.concat(reactorQ)
-        : authoredQ
+    ? authoredQ.concat(reactorQ)
+    : authoredQ
 
   const participantsQ = authoredWithReactionsQ
-        .concat(edge('comments', {}, authoredWithReactionsQ))
+    .concat(edge('comments', {}, authoredWithReactionsQ))
 
   const reviewQ = edge('reviews', {}, authoredQ
-        .concat(edge('comments', {}, authoredWithReactionsQ)))
+    .concat(edge('comments', {}, authoredWithReactionsQ)))
 
   const prsQ = edge('pullRequests', {},
     issueBits.concat(participantsQ.concat(reviewQ))
@@ -95,20 +95,20 @@ const repoSubQuery = (before, after, commits, reactionsInQuery) => {
 
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName, before, after, commits, reactions) =>
-      node('repository', {name: repoName, owner: ownerName},
-           repoSubQuery(before, after, commits, reactions))
+  node('repository', {name: repoName, owner: ownerName},
+    repoSubQuery(before, after, commits, reactions))
 
 const repositories = (before, after, commits, reactions) =>
-      edge('repositories', {}, repoSubQuery(before, after, commits, reactions))
+  edge('repositories', {}, repoSubQuery(before, after, commits, reactions))
 
 /** Returns a query to retrieve all contributors to an org. */
 const orgRepos = (name, before, after, commits, reactions) =>
-      node('organization', {login: name}, [
-        repositories(before, after, commits, reactions),
-        val('name'),
-        val('login'),
-        val('email')
-      ])
+  node('organization', {login: name}, [
+    repositories(before, after, commits, reactions),
+    val('name'),
+    val('login'),
+    val('email')
+  ])
 
 /// //
 // Data Filtering (co-queries if you will)
@@ -125,16 +125,16 @@ const within = (obj, before, after) => {
   * after.
   */
 const timeFilter = (before, after) =>
-      data => data.filter(x => within(x, before, after))
+  data => data.filter(x => within(x, before, after))
 
 const users = arr =>
-      arr.map(x => x.author || x.user)
-      // Get rid of null authors (deleted accounts)
-      .filter(x => !(x == null))
-      .map(x => {
-        x.count = 1
-        return x
-      })
+  arr.map(x => x.author || x.user)
+  // Get rid of null authors (deleted accounts)
+    .filter(x => !(x == null))
+    .map(x => {
+      x.count = 1
+      return x
+    })
 
 /** Returns an array which is the concatenation of arrays in the passed in
   * array.
@@ -172,7 +172,7 @@ const byCount = (a, b) => b.count - a.count
 const repoSynopsis = ({json, before, after, commits, reactions}) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
-        .sort(byCount)
+    .sort(byCount)
 
   const repo = json.repository
 
@@ -201,8 +201,8 @@ const repoSynopsis = ({json, before, after, commits, reactions}) => {
 
   if (commits) {
     const commitAuthors = repo.ref
-          ? repo.ref.target.history.nodes.map(x => x.author)
-          : []
+      ? repo.ref.target.history.nodes.map(x => x.author)
+      : []
     const commitComments = repo.commitComments.nodes
     processed.commitAuthors = mergeContributions(users(commitAuthors))
       .sort(byCount)
@@ -213,17 +213,17 @@ const repoSynopsis = ({json, before, after, commits, reactions}) => {
 }
 
 const mergeArrays = (a, b) =>
-      mergeContributions(a.concat(b))
+  mergeContributions(a.concat(b))
 
 /** Recursively merges all contributor maps in the list into a single map */
 const mergeRepoResults = repos =>
-      repos.reduce((acc, obj) => {
-        const ret = {}
-        for (let key in obj) {
-          ret[key] = mergeArrays(obj[key], acc[key] || [])
-        }
-        return ret
-      })
+  repos.reduce((acc, obj) => {
+    const ret = {}
+    for (let key in obj) {
+      ret[key] = mergeArrays(obj[key], acc[key] || [])
+    }
+    return ret
+  })
 
 const orgSynopsis = ({
   json, before, after, commits, reactions
@@ -286,8 +286,8 @@ const filterRepo = (json, before, after) => {
   }).filter(x => x != null)
 
   const commits = repo.ref
-        ? repo.ref.target.history
-        : []
+    ? repo.ref.target.history
+    : []
 
   let commitComments = []
   if (repo.commitComments) {
@@ -317,7 +317,7 @@ const filterOrg = (json, before, after) => {
   const repos = org.repositories.map(repo => {
     return filterRepo({repository: repo}, before, after)
   }).filter(x => x != null)
-  .map(x => x.repository)
+    .map(x => x.repository)
   json.organization.repositories = repos
   return json
 }
