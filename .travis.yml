@@ -10,8 +10,6 @@ node_js:
 before_script:
   - npm prune
   - greenkeeper-lockfile-update
-after_success:
-  - npm run semantic-release
 branches:
   except:
     - /^v\d+\.\d+\.\d+$/
@@ -19,3 +17,15 @@ before_install:
 - npm install -g npm@5
 - npm install -g greenkeeper-lockfile@1
 after_script: greenkeeper-lockfile-upload
+jobs:
+  include:
+    - stage: release
+      script: skip
+      deploy:
+        provider: script
+        skip_cleanup: true,
+        script: npm run semantic-release
+stages:
+  - test
+  - name: release
+    if: branch = master
