@@ -73,6 +73,8 @@ const verifyResultHasKey = (key, query, dryRun) =>
 // API
 //
 
+const epochDate = new Date(0)
+
 const prunedFetch = args => graphql.prune(args)
   .then(json => queries.timeFilterFullTree(json, args.before, args.after))
 
@@ -80,11 +82,11 @@ const prunedFetch = args => graphql.prune(args)
   * @param token  - GitHub auth token
   * @param user   - Username to whom the repo belongs
   * @param repo   - repo name
-  * @param before - only return contributions before this timestamp
-  * @param after  - only return contributions after this timestamp
+  * @param {Date} [before = new Date()] - only return contributions before this timestamp
+  * @param {Date} [after = new Date(0)] - only return contributions after this timestamp
   */
 const repoContributors = ({
-  token, user, repo, before, after, debug, dryRun, verbose, commits, reactions, full
+  token, user, repo, before = new Date(), after = epochDate, debug, dryRun, verbose, commits, reactions, full
 }) => {
   const summarize = args =>
     graphql.execute(args)
@@ -114,11 +116,11 @@ const repoContributors = ({
 /** Returns contributions to all repos owned by orgName.
   * @param token   - GitHub auth token
   * @param orgName - Name of organization
-  * @param before  - only return contributions before this timestamp
-  * @param after   - only return contributions after this timestamp
+  * @param {Date} [before = new Date()]  - only return contributions before this timestamp
+  * @param {Date} [after = new Date(0)]  - only return contributions after this timestamp
   */
 const orgContributors = ({
-  token, orgName, before, after, debug, dryRun, verbose, commits, reactions, full
+  token, orgName, before = new Date(), after = epochDate, debug, dryRun, verbose, commits, reactions, full
 }) => {
   const summarise = args =>
     graphql.execute(args)

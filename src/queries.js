@@ -47,9 +47,11 @@ const issueBits = [
   val('state')
 ]
 
-const repoSubQuery = (before, after, commits, reactionsInQuery) => {
+const epochTime = '1970-01-01T00:00:00.000Z' // new Date(0).toISOString()
+
+const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => {
   const b = before.toISOString()
-  const a = after.toISOString()
+  const a = after ? after.toISOString() : epochTime
 
   const masterCommits = node('ref', {qualifiedName: 'refs/heads/master'}, [
     typeSwitch('target', {}, [
