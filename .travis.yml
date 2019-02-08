@@ -6,7 +6,8 @@ notifications:
   email: false
 node_js:
   - '8'
-  - '7'
+  - '10'
+  - '11'
 before_script:
   - npm prune
   - greenkeeper-lockfile-update
