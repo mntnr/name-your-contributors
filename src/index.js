@@ -34,7 +34,7 @@ const parseGitURL = url => {
 
 const getCurrentRepoInfo = () => shellOut(gitConfigCommand)
   .then(parseGitURL)
-  .then(x => { return {user: x[1], repo: x[2]} })
+  .then(x => { return { user: x[1], repo: x[2] } })
 
 //
 // CSV Output
@@ -95,7 +95,7 @@ const repoContributors = ({
         if (dryRun) {
           return json
         } else {
-          return queries.repoSynopsis({json, before, after, commits, reactions})
+          return queries.repoSynopsis({ json, before, after, commits, reactions })
         }
       })
 
@@ -161,7 +161,7 @@ const fromConfig = async ({
   if (!ght) {
     throw new Error('No token specified in config or arguments. Aborting.')
   }
-  const repoResults = config.repos.map(({login, repo, before, after}) => {
+  const repoResults = config.repos.map(({ login, repo, before, after }) => {
     const afterDate = after ? new Date(after) : new Date(0)
     const beforeDate = before ? new Date(before) : new Date()
 
@@ -180,7 +180,7 @@ const fromConfig = async ({
     })
   })
 
-  const orgResults = config.orgs.map(({login, before, after}) => {
+  const orgResults = config.orgs.map(({ login, before, after }) => {
     const afterDate = after ? new Date(after) : new Date(0)
     const beforeDate = before ? new Date(before) : new Date()
     return orgContributors({

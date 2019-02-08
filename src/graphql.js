@@ -61,11 +61,11 @@ const childrenString = children => {
   * @method toString - Prints out the query as a string. Required by the runtime
   * for query execution, also handy for debugging.
   */
-const queryRoot = ({name, args, children, type}) => {
-  const item = {name, args, children, type}
+const queryRoot = ({ name, args, children, type }) => {
+  const item = { name, args, children, type }
 
   item.addChild = child =>
-    queryRoot({name, args, children: children.concat(child), type})
+    queryRoot({ name, args, children: children.concat(child), type })
 
   item.toString = () => {
     if (args == null) {
@@ -187,14 +187,14 @@ const find = (l, name) => {
   */
 const fetchAll = async (reqargs, query, cursor, id, type) => {
   const args = assoc(query.args, 'first', 100, 'after', cursor)
-  const q = queryType('node', {id: id}, [
+  const q = queryType('node', { id: id }, [
     [type, [
       queryNoid(query.name, args, query.children)
     ]]
   ])
 
   const response = await initialRequest(assoc(reqargs, 'query', q))
-  const {endCursor, hasNextPage} = response.json.node[query.name].pageInfo
+  const { endCursor, hasNextPage } = response.json.node[query.name].pageInfo
 
   if (hasNextPage) {
     const more = await fetchAll(reqargs, query, endCursor, id, type)
@@ -205,7 +205,7 @@ const fetchAll = async (reqargs, query, cursor, id, type) => {
     }
   } else {
     return {
-      pageInfo: {endCursor, hasNextPage},
+      pageInfo: { endCursor, hasNextPage },
       nodes: response.json.node[query.name].nodes
     }
   }
@@ -217,9 +217,9 @@ const walkChildren = async (args, children, response) => {
 
 const walkEdge = async (args, query, parent) => {
   const response = parent[query.name]
-  const {hasNextPage, endCursor} = response.pageInfo
+  const { hasNextPage, endCursor } = response.pageInfo
   if (hasNextPage) {
-    const {pageInfo, nodes} = await fetchAll(
+    const { pageInfo, nodes } = await fetchAll(
       args, query, endCursor, parent.id, parent.__typename
     )
 
@@ -234,7 +234,7 @@ const walkEdge = async (args, query, parent) => {
 }
 
 const depWalk = async (args, query, response) => {
-  const {type, name} = query
+  const { type, name } = query
   const next = response[name]
 
   if (next == null || type === 'leaf') {
@@ -268,7 +268,7 @@ const cleanChildren = (json, children) => {
 }
 
 const cleanwalk = (json, query) => {
-  const {type, name} = query
+  const { type, name } = query
 
   if (json[name] == null || type === 'leaf') {
   } else if (type === 'edge') {
@@ -322,7 +322,7 @@ const queryWithCost = (item, dryRun) => '{"query": ' +
     Same params as execute.
     Returns the raw HTTP response body.
   */
-const queryRequest = ({token, query, debug, dryRun, verbose, name}) => {
+const queryRequest = ({ token, query, debug, dryRun, verbose, name }) => {
   return new Promise((resolve, reject) => {
     let queryResponse = ''
     const headers = {
@@ -379,7 +379,7 @@ let reqCounter = 1
 
 /** Verbose and debug logging middleware. */
 const logResponse = (queryName, verbose, debug) => res => {
-  const {query, json, headers, cacheHit} = res
+  const { query, json, headers, cacheHit } = res
 
   if (debug) {
     console.log(`#${reqCounter++} [${queryName}]:
@@ -443,7 +443,7 @@ const maxPerMinute = 300
 const queue = []
 
 const tryRun = queue => {
-  const {args, resolve, reject} = queue[0]
+  const { args, resolve, reject } = queue[0]
   const req = queryRequest(args)
 
   req.then(x => {
@@ -522,7 +522,7 @@ const cache = require('persistent-cache')({
 /** Enqueue request to be handled by executor. */
 const executeOnQueue = args =>
   new Promise((resolve, reject) => {
-    queue.push({args, resolve, reject})
+    queue.push({ args, resolve, reject })
     runQueue()
   })
 

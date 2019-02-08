@@ -152,20 +152,20 @@ const handleError = e => {
 
 const handle = (f, opts) => f(opts).then(formatReturn).then(handleOut).catch(handleError)
 
-const fetchRepo = (user, repo) => handle(main.repoContributors, defaultOpts({user, repo}))
+const fetchRepo = (user, repo) => handle(main.repoContributors, defaultOpts({ user, repo }))
 
 if (cli.flags.c) {
-  const opts = defaultOpts({file: cli.flags.c})
+  const opts = defaultOpts({ file: cli.flags.c })
   main.fromConfig(opts)
     .then(x => JSON.stringify(x, null, 2))
     .then(handleOut)
     .catch(handleError)
 } else if (cli.flags.o) {
-  handle(main.orgContributors, defaultOpts({orgName: cli.flags.o}))
+  handle(main.orgContributors, defaultOpts({ orgName: cli.flags.o }))
 } else if (cli.flags.u && cli.flags.r) {
   fetchRepo(cli.flags.u, cli.flags.r)
 } else if (cli.flags.r) {
   main.currentUser(token).then(user => fetchRepo(user, cli.flags.r))
 } else {
-  main.getCurrentRepoInfo().then(({user, repo}) => fetchRepo(user, repo))
+  main.getCurrentRepoInfo().then(({ user, repo }) => fetchRepo(user, repo))
 }

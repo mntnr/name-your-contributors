@@ -17,12 +17,12 @@ test('flatten only flattens one level deep', t => {
 })
 
 const dates = [
-  {createdAt: new Date('2016-09-24')},
-  {createdAt: new Date('2015-09-24')},
-  {createdAt: new Date('2014-09-24')},
-  {createdAt: new Date('2017-09-24T19:30')},
-  {createdAt: new Date('2017-09-24T12:00')},
-  {createdAt: new Date('2017-09-24T04:15')}
+  { createdAt: new Date('2016-09-24') },
+  { createdAt: new Date('2015-09-24') },
+  { createdAt: new Date('2014-09-24') },
+  { createdAt: new Date('2017-09-24T19:30') },
+  { createdAt: new Date('2017-09-24T12:00') },
+  { createdAt: new Date('2017-09-24T04:15') }
 ]
 
 const tf = q.timeFilter
@@ -34,31 +34,31 @@ test('time filtering granularity', t => {
 })
 
 test('time filtering <=', t => {
-  t.is(tf(fdate, fdate)([{createdAt: fdate}]).length, 1)
+  t.is(tf(fdate, fdate)([{ createdAt: fdate }]).length, 1)
 })
 
 test('merge', t => {
-  const testusers = [{login: 'x', count: 1, name: 'x', url: 'x'},
-    {login: 'y', count: 1, name: 'x', url: 'x'},
-    {login: 'x', count: 3, name: 'x', url: 'x'},
-    {login: 'z', count: 2, name: 'x', url: 'x'}]
+  const testusers = [{ login: 'x', count: 1, name: 'x', url: 'x' },
+    { login: 'y', count: 1, name: 'x', url: 'x' },
+    { login: 'x', count: 3, name: 'x', url: 'x' },
+    { login: 'z', count: 2, name: 'x', url: 'x' }]
 
   t.deepEqual(q.mergeContributions(testusers), [
-    {login: 'x', count: 4, name: 'x', url: 'x'},
-    {login: 'y', count: 1, name: 'x', url: 'x'},
-    {login: 'z', count: 2, name: 'x', url: 'x'}
+    { login: 'x', count: 4, name: 'x', url: 'x' },
+    { login: 'y', count: 1, name: 'x', url: 'x' },
+    { login: 'z', count: 2, name: 'x', url: 'x' }
   ])
   // Objects don't get modified when counting:
   t.deepEqual(q.mergeArrays(testusers, testusers), [
-    {login: 'x', count: 8, name: 'x', url: 'x'},
-    {login: 'y', count: 2, name: 'x', url: 'x'},
-    {login: 'z', count: 4, name: 'x', url: 'x'}
+    { login: 'x', count: 8, name: 'x', url: 'x' },
+    { login: 'y', count: 2, name: 'x', url: 'x' },
+    { login: 'z', count: 4, name: 'x', url: 'x' }
   ])
 })
 
 test('null users get filtered', t => {
-  const ulist = [{author: {login: 'me', name: 'just me'}}, {author: null}]
-  t.deepEqual(q.users(ulist), [{login: 'me', name: 'just me', count: 1}])
+  const ulist = [{ author: { login: 'me', name: 'just me' } }, { author: null }]
+  t.deepEqual(q.users(ulist), [{ login: 'me', name: 'just me', count: 1 }])
 })
 
 const tree = {

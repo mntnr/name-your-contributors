@@ -53,10 +53,10 @@ const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => 
   const b = before.toISOString()
   const a = after ? after.toISOString() : epochTime
 
-  const masterCommits = node('ref', {qualifiedName: 'refs/heads/master'}, [
+  const masterCommits = node('ref', { qualifiedName: 'refs/heads/master' }, [
     typeSwitch('target', {}, [
       ['Commit', [
-        edge('history', {since: a, until: b},
+        edge('history', { since: a, until: b },
           [commitAuthorQ, val('committedDate')])
       ]]
     ])
@@ -97,7 +97,7 @@ const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => 
 
 /** Returns a query to retrieve all contributors to a repo */
 const repository = (repoName, ownerName, before, after, commits, reactions) =>
-  node('repository', {name: repoName, owner: ownerName},
+  node('repository', { name: repoName, owner: ownerName },
     repoSubQuery(before, after, commits, reactions))
 
 const repositories = (before, after, commits, reactions) =>
@@ -105,7 +105,7 @@ const repositories = (before, after, commits, reactions) =>
 
 /** Returns a query to retrieve all contributors to an org. */
 const orgRepos = (name, before, after, commits, reactions) =>
-  node('organization', {login: name}, [
+  node('organization', { login: name }, [
     repositories(before, after, commits, reactions),
     val('name'),
     val('login'),
@@ -171,7 +171,7 @@ const byCount = (a, b) => b.count - a.count
 /** Produces a synopsis (the canonical output of name-your-contributors) of
   * contributions to the given repo between before and after.
   */
-const repoSynopsis = ({json, before, after, commits, reactions}) => {
+const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
     .sort(byCount)
@@ -235,7 +235,7 @@ const orgSynopsis = ({
   return mergeRepoResults(
     repos.map(repo => {
       return repoSynopsis({
-        json: {repository: repo},
+        json: { repository: repo },
         commits,
         reactions,
         before,
@@ -317,7 +317,7 @@ const filterRepo = (json, before, after) => {
 const filterOrg = (json, before, after) => {
   const org = json.organization
   const repos = org.repositories.map(repo => {
-    return filterRepo({repository: repo}, before, after)
+    return filterRepo({ repository: repo }, before, after)
   }).filter(x => x != null)
     .map(x => x.repository)
   json.organization.repositories = repos
