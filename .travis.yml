@@ -5,8 +5,8 @@ cache:
 notifications:
   email: false
 node_js:
-  - '10'
-  - '11'
+  - 'stable'
+  - 'lts/*'
 before_script:
   - npm prune
   - greenkeeper-lockfile-update
