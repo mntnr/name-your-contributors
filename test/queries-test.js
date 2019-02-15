@@ -44,15 +44,15 @@ test('merge', t => {
     { login: 'z', count: 2, name: 'x', url: 'x' }]
 
   t.deepEqual(q.mergeContributions(testusers), [
-    { login: 'x', count: 4, name: 'x', url: 'x' },
-    { login: 'y', count: 1, name: 'x', url: 'x' },
-    { login: 'z', count: 2, name: 'x', url: 'x' }
+    { login: 'x', count: 4, name: 'x', url: 'x', email: undefined },
+    { login: 'y', count: 1, name: 'x', url: 'x', email: undefined },
+    { login: 'z', count: 2, name: 'x', url: 'x', email: undefined }
   ])
   // Objects don't get modified when counting:
   t.deepEqual(q.mergeArrays(testusers, testusers), [
-    { login: 'x', count: 8, name: 'x', url: 'x' },
-    { login: 'y', count: 2, name: 'x', url: 'x' },
-    { login: 'z', count: 4, name: 'x', url: 'x' }
+    { login: 'x', count: 8, name: 'x', url: 'x', email: undefined },
+    { login: 'y', count: 2, name: 'x', url: 'x', email: undefined },
+    { login: 'z', count: 4, name: 'x', url: 'x', email: undefined }
   ])
 })
 
