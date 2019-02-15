@@ -159,7 +159,8 @@ const mergeContributions = xs => {
         login: x.login,
         name: x.name,
         url: x.url,
-        count: x.count
+        count: x.count,
+        email: x.email
       })
     }
   }
