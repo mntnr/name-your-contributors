@@ -56,6 +56,19 @@ test('merge', t => {
   ])
 })
 
+test('extended merge', t => {
+  const testusers = [{ author: { login: 'x', name: 'x', url: 'x' }, count: 1, labels: { nodes: [{ name: 'a' }] } },
+    { author: { login: 'y', name: 'x', url: 'x' }, count: 1, labels: { nodes: []} },
+    { author: { login: 'x', name: 'x', url: 'x' }, count: 3, labels: { nodes: [{ name: 'b' }] } },
+    { author: { login: 'z', name: 'x', url: 'x' }, count: 2, labels: { nodes: [{ name: 'c' }] } }]
+
+  t.deepEqual(q.mergeExtendedContributions(testusers), [
+    { login: 'x', count: 4, name: 'x', url: 'x', email: undefined, labels: ['a', 'b'] },
+    { login: 'y', count: 1, name: 'x', url: 'x', email: undefined, labels: [] },
+    { login: 'z', count: 2, name: 'x', url: 'x', email: undefined, labels: ['c'] }
+  ])
+})
+
 test('null users get filtered', t => {
   const ulist = [{ author: { login: 'me', name: 'just me' } }, { author: null }]
   t.deepEqual(q.users(ulist), [{ login: 'me', name: 'just me', count: 1 }])

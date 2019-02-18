@@ -174,7 +174,11 @@ const mergeContributions = xs => {
 const mergeExtendedContributions = xs => {
   // Get rid of null authors
   let usrs = xs.filter(x => x.author != null || x.user != null)
-  xs.forEach(x => { x.count = 1 })
+  xs.forEach(x => { 
+    if (!('count' in x)) {
+      x.count = 1
+    }
+  })
   const m = new Map()
   for (let x of usrs) {
     // Use GitHub login as unique key.
@@ -389,6 +393,7 @@ module.exports = {
   users,
   repoSynopsis,
   mergeContributions,
+  mergeExtendedContributions,
   mergeArrays,
   mergeRepoResults,
   authoredQ
