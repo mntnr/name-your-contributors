@@ -40,15 +40,14 @@ const reactorQ = edge('reactions', {}, [
 ])
 
 const commitAuthorQ = noid('author', {}, [userInfo])
-
 const issueBits = [
   val('title'),
   val('number'),
-  val('state')
+  val('state'),
+  edge('labels', {}, [val('name')])
 ]
 
 const epochTime = '1970-01-01T00:00:00.000Z' // new Date(0).toISOString()
-
 const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => {
   const b = before.toISOString()
   const a = after ? after.toISOString() : epochTime
@@ -167,6 +166,37 @@ const mergeContributions = xs => {
   return Array.from(m.values())
 }
 
+/** Given an array of objects, returns an array of pairs where each
+  * first element occurs at most once.
+  */
+const mergeLabels = xs => {
+  const m = new Map()
+  for (let x of xs) {
+    // Use GitHub login as unique key.
+    let key = x.author.login
+    if (m.has(key)) {
+      let p = m.get(key)
+      if (x.labels.length) {
+        x.labels.forEach(label => p.labels.add(label))
+      }
+    } else {
+      m.set(key, {
+        login: key,
+        name: x.author.name,
+        email: x.author.email,
+        url: x.author.url,
+        labels: new Set(x.labels)
+      })
+    }
+  }
+  return Array
+    .from(m.values())
+    .map(obj => { // Converts the Set to an array
+      obj.labels = Array.from(obj.labels)
+      return obj
+    })
+}
+
 const byCount = (a, b) => b.count - a.count
 
 /** Produces a synopsis (the canonical output of name-your-contributors) of
@@ -176,6 +206,14 @@ const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
     .sort(byCount)
+  const extendedProcess = x => {
+    let la = mergeLabels(x.map(item => ({
+      labels: item.labels.nodes.map(label => label.name),
+      author: item.author
+    })))
+    return process(x)
+      .map((item, idx) => Object.assign({}, item, la[idx]))
+  }
 
   const repo = json.repository
 
@@ -187,9 +225,9 @@ const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const issueComments = flatten(issues.map(i => i.comments.nodes))
 
   const processed = {
-    prCreators: process(prs),
+    prCreators: extendedProcess(prs),
     prCommentators: process(prComments),
-    issueCreators: process(issues),
+    issueCreators: extendedProcess(issues),
     issueCommentators: process(issueComments),
     reviewers: process(reviews)
   }
