@@ -40,6 +40,7 @@ const reactorQ = edge('reactions', {}, [
 ])
 
 const commitAuthorQ = noid('author', {}, [userInfo])
+
 const issueBits = [
   val('title'),
   val('number'),
@@ -48,6 +49,7 @@ const issueBits = [
 ]
 
 const epochTime = '1970-01-01T00:00:00.000Z' // new Date(0).toISOString()
+
 const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => {
   const b = before.toISOString()
   const a = after ? after.toISOString() : epochTime
@@ -169,23 +171,31 @@ const mergeContributions = xs => {
 /** Given an array of objects, returns an array of pairs where each
   * first element occurs at most once.
   */
-const mergeLabels = xs => {
+const mergeExtendedContributions = xs => {
+  // Get rid of null authors
+  let usrs = xs.filter(x => x.author != null || x.user != null)
+  xs.forEach(x => { x.count = 1 })
   const m = new Map()
-  for (let x of xs) {
+  for (let x of usrs) {
     // Use GitHub login as unique key.
     let key = x.author.login
+    let labels = x.labels.nodes.map(label => label.name)
     if (m.has(key)) {
       let p = m.get(key)
-      if (x.labels.length) {
-        x.labels.forEach(label => p.labels.add(label))
+
+      if (labels.length) {
+        labels.forEach(label => p.labels.add(label))
       }
+      p.count += x.count
     } else {
       m.set(key, {
+        // Poor man's clone
         login: key,
         name: x.author.name,
-        email: x.author.email,
         url: x.author.url,
-        labels: new Set(x.labels)
+        count: x.count,
+        email: x.author.email,
+        labels: new Set(labels)
       })
     }
   }
@@ -206,14 +216,7 @@ const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
     .sort(byCount)
-  const extendedProcess = x => {
-    let la = mergeLabels(x.map(item => ({
-      labels: item.labels.nodes.map(label => label.name),
-      author: item.author
-    })))
-    return process(x)
-      .map((item, idx) => Object.assign({}, item, la[idx]))
-  }
+  const extendedProcess = x => mergeExtendedContributions(tf(x))
 
   const repo = json.repository
 
