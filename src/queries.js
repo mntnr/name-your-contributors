@@ -57,8 +57,7 @@ const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => 
   const masterCommits = node('ref', { qualifiedName: 'refs/heads/master' }, [
     typeSwitch('target', {}, [
       ['Commit', [
-        edge('history', { since: a, until: b },
-          [commitAuthorQ, val('committedDate')])
+        edge('history', { since: a, until: b }, [commitAuthorQ, val('committedDate')])
       ]]
     ])
   ])
@@ -174,7 +173,7 @@ const mergeContributions = xs => {
 const mergeExtendedContributions = xs => {
   // Get rid of null authors
   let usrs = xs.filter(x => x.author != null || x.user != null)
-  xs.forEach(x => { 
+  xs.forEach(x => {
     if (!('count' in x)) {
       x.count = 1
     }
@@ -182,8 +181,8 @@ const mergeExtendedContributions = xs => {
   const m = new Map()
   for (let x of usrs) {
     // Use GitHub login as unique key.
-    let key = x.author.login
-    let labels = x.labels.nodes.map(label => label.name)
+    const key = x.author.login
+    const labels = x.labels.nodes.map(label => label.name)
     if (m.has(key)) {
       let p = m.get(key)
 
@@ -221,6 +220,7 @@ const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const process = x => mergeContributions(users(tf(x)))
     .sort(byCount)
   const extendedProcess = x => mergeExtendedContributions(tf(x))
+    .sort(byCount)
 
   const repo = json.repository
 
