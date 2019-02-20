@@ -58,7 +58,7 @@ test('merge', t => {
 
 test('extended merge', t => {
   const testusers = [{ author: { login: 'x', name: 'x', url: 'x' }, count: 1, labels: { nodes: [{ name: 'a' }] } },
-    { author: { login: 'y', name: 'x', url: 'x' }, count: 1, labels: { nodes: []} },
+    { author: { login: 'y', name: 'x', url: 'x' }, count: 1, labels: { nodes: [] } },
     { author: { login: 'x', name: 'x', url: 'x' }, count: 3, labels: { nodes: [{ name: 'b' }] } },
     { author: { login: 'z', name: 'x', url: 'x' }, count: 2, labels: { nodes: [{ name: 'c' }] } }]
 
