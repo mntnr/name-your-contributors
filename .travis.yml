@@ -21,9 +21,9 @@ jobs:
       script: skip
       deploy:
         provider: script
-        skip_cleanup: true,
+        skip_cleanup: true
         script: npm run semantic-release
 stages:
-  - test
+  - name: test
   - name: release
     if: branch = master
