@@ -13,7 +13,8 @@
   "scripts": {
     "lint": "standard",
     "test": "ava --no-color test/*.js",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "commit": "git cz"
   },
   "keywords": [
     "community",
@@ -43,7 +44,9 @@
   },
   "devDependencies": {
     "ava": "^1.0.1",
-    "semantic-release": "^15.13.3",
+    "cz-conventional-changelog": "^2.1.0",
+    "git-cz": "^1.8.0",
+    "semantic-release": "^15.13.4",
     "standard": "^12.0.1"
   },
   "engines": {
@@ -62,5 +65,10 @@
       "url": "burntfen.com"
     }
   ],
-  "main": "src/index.js"
+  "main": "src/index.js",
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  }
 }

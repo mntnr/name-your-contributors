@@ -3,6 +3,7 @@
 [![Greenkeeper badge](https://badges.greenkeeper.io/mntnr/name-your-contributors.svg)](https://greenkeeper.io/)
 [![npm version](https://badge.fury.io/js/name-your-contributors.svg)](https://badge.fury.io/js/name-your-contributors)
 [![Build Status](https://travis-ci.org/mntnr/name-your-contributors.svg?branch=master)](https://travis-ci.org/mntnr/name-your-contributors)
+[![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg))](http://commitizen.github.io/cz-cli/)
 
 > Name your GitHub contributors; get commits, issues, and comments
 
