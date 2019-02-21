@@ -53,7 +53,6 @@ These people have helped make Name Your Contributors:
  - [@daviddias](https://github.com/daviddias)
  - [@dignifiedquire](https://github.com/dignifiedquire)
  - [@gr2m](https://github.com/gr2m)
- - [@greenkeeper[bot]](https://github.com/greenkeeper[bot])
  - [@greenkeeper](https://github.com/greenkeeper)
  - [@jbenet](https://github.com/jbenet)
  - [@jozefizso](https://github.com/jozefizso)
