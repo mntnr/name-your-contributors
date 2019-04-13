@@ -352,7 +352,7 @@ const filterRepo = (json, before, after) => {
   repo.pullRequests = prs
 
   if (repo.commitComments) {
-    repo.commitcomments = commitComments
+    repo.commitComments = commitComments
   }
 
   return json
