@@ -3,3 +3,6 @@ config.json
 data
 cache
 examples
+.vscode
+.idea
+

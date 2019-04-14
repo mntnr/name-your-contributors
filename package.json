@@ -10,6 +10,7 @@
     "url": "burntfen.com"
   },
   "bin": "src/cli.js",
+  "main": "src/index.js",
   "scripts": {
     "lint": "standard",
     "test": "ava --no-color test/*.js",
