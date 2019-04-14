@@ -128,19 +128,18 @@ nyc.repoContributors({
 	token: process.env.GITHUB_TOKEN,
 	user: 'mntnr',
 	repo: 'name-your-contributors',
-	// Below: known bug. See #85
 	before: new Date(),
 	after: new Date(0)
-	}).then(//do something with the results
-	)
-})
+}).then(
+	//do something with the results
+)
 
 nyc.orgContributors({
 	token: process.env.GITHUB_TOKEN,
 	orgName: 'ipfs',
 	before: '2017-01-01',
 	after: '2016-01-01'
-	}).then(...)
+}).then(...)
 ```
 
 ### From the Command Line
@@ -419,6 +418,7 @@ will find the username and repo for the local git repository and use that.
 #### opts.after
 
 Type: `string`
+Default value: `new Date(0)`
 
 The ISO timestamp to get contributors after.
 
@@ -428,6 +428,7 @@ expected.
 #### opts.before
 
 Type: `string`
+Default value: `new Date()`
 
 Get contributors from before this ISO timestamp.
 

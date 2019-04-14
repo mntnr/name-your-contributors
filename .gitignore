@@ -2,5 +2,7 @@ node_modules
 config.json
 data
 cache
+examples
 .vscode
 .idea
+
