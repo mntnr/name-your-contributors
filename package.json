@@ -44,10 +44,12 @@
     "persistent-cache": "^1.1.1"
   },
   "devDependencies": {
+    "@semantic-release/git": "^7.0.8",
+    "@semantic-release/npm": "^5.1.7",
     "ava": "^1.0.1",
     "cz-conventional-changelog": "^2.1.0",
     "git-cz": "^2.0.0",
-    "semantic-release": "^15.13.4",
+    "semantic-release": "^15.13.9",
     "standard": "^12.0.1"
   },
   "engines": {
@@ -66,7 +68,6 @@
       "url": "burntfen.com"
     }
   ],
-  "main": "src/index.js",
   "config": {
     "commitizen": {
       "path": "cz-conventional-changelog"
