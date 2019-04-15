@@ -1,6 +1,6 @@
 {
   "name": "name-your-contributors",
-  "version": "0.0.0-development",
+  "version": "3.8.2",
   "description": "Name your GitHub contributors; get commits, issues, and comments",
   "license": "MIT",
   "repository": "mntnr/name-your-contributors",
@@ -49,7 +49,7 @@
     "ava": "^1.0.1",
     "cz-conventional-changelog": "^2.1.0",
     "git-cz": "^2.0.0",
-    "semantic-release": "^15.13.9",
+    "semantic-release": "^15.13.12",
     "standard": "^12.0.1"
   },
   "engines": {
