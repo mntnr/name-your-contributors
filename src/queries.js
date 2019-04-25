@@ -44,7 +44,8 @@ const commitAuthorQ = noid('author', {}, [userInfo])
 const issueBits = [
   val('title'),
   val('number'),
-  val('state')
+  val('state'),
+  edge('labels', {}, [val('name')])
 ]
 
 const epochTime = '1970-01-01T00:00:00.000Z' // new Date(0).toISOString()
@@ -56,8 +57,7 @@ const repoSubQuery = (before = new Date(), after, commits, reactionsInQuery) => 
   const masterCommits = node('ref', { qualifiedName: 'refs/heads/master' }, [
     typeSwitch('target', {}, [
       ['Commit', [
-        edge('history', { since: a, until: b },
-          [commitAuthorQ, val('committedDate')])
+        edge('history', { since: a, until: b }, [commitAuthorQ, val('committedDate')])
       ]]
     ])
   ])
@@ -167,6 +167,49 @@ const mergeContributions = xs => {
   return Array.from(m.values())
 }
 
+/** Given an array of objects, returns an array of pairs where each
+  * first element occurs at most once.
+  */
+const mergeExtendedContributions = xs => {
+  // Get rid of null authors
+  let usrs = xs.filter(x => x.author != null || x.user != null)
+  xs.forEach(x => {
+    if (!('count' in x)) {
+      x.count = 1
+    }
+  })
+  const m = new Map()
+  for (let x of usrs) {
+    // Use GitHub login as unique key.
+    const key = x.author.login
+    const labels = x.labels.nodes.map(label => label.name)
+    if (m.has(key)) {
+      let p = m.get(key)
+
+      if (labels.length) {
+        labels.forEach(label => p.labels.add(label))
+      }
+      p.count += x.count
+    } else {
+      m.set(key, {
+        // Poor man's clone
+        login: key,
+        name: x.author.name,
+        url: x.author.url,
+        count: x.count,
+        email: x.author.email,
+        labels: new Set(labels)
+      })
+    }
+  }
+  return Array
+    .from(m.values())
+    .map(obj => { // Converts the Set to an array
+      obj.labels = Array.from(obj.labels)
+      return obj
+    })
+}
+
 const byCount = (a, b) => b.count - a.count
 
 /** Produces a synopsis (the canonical output of name-your-contributors) of
@@ -175,6 +218,8 @@ const byCount = (a, b) => b.count - a.count
 const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const tf = timeFilter(before, after)
   const process = x => mergeContributions(users(tf(x)))
+    .sort(byCount)
+  const extendedProcess = x => mergeExtendedContributions(tf(x))
     .sort(byCount)
 
   const repo = json.repository
@@ -187,9 +232,9 @@ const repoSynopsis = ({ json, before, after, commits, reactions }) => {
   const issueComments = flatten(issues.map(i => i.comments.nodes))
 
   const processed = {
-    prCreators: process(prs),
+    prCreators: extendedProcess(prs),
     prCommentators: process(prComments),
-    issueCreators: process(issues),
+    issueCreators: extendedProcess(issues),
     issueCommentators: process(issueComments),
     reviewers: process(reviews)
   }
@@ -307,7 +352,7 @@ const filterRepo = (json, before, after) => {
   repo.pullRequests = prs
 
   if (repo.commitComments) {
-    repo.commitcomments = commitComments
+    repo.commitComments = commitComments
   }
 
   return json
@@ -348,6 +393,7 @@ module.exports = {
   users,
   repoSynopsis,
   mergeContributions,
+  mergeExtendedContributions,
   mergeArrays,
   mergeRepoResults,
   authoredQ

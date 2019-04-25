@@ -45,8 +45,10 @@ const flatten = json => {
   const prcs = json.prCommentators.map(x => ['pr commentator'].concat(x))
   const is = json.issueCreators.map(x => ['issue creator'].concat(x))
   const iscs = json.issueCommentators.map(x => ['issue commentator'].concat(x))
+  const co = json.commitAuthors.map(x => ['commit creator'].concat(x))
+  const cocs = json.commitCommentators.map(x => ['commit commentator'].concat(x))
 
-  return prs.concat(prcs).concat(is).concat(iscs)
+  return [...prs, ...prcs, ...is, ...iscs, ...co, ...cocs]
 }
 
 const toCSV = json => {
