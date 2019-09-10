@@ -420,9 +420,8 @@ const abusive = e => {
 }
 
 const rateLimited = e => {
-  const body = JSON.parse(e.body)
   const rem = e && e.headers && e.headers['x-ratelimit-remaining']
-  return e.status === 200 && body.data === null && rem && parseInt(rem) === 0
+  return rem && parseInt(rem) === 0
 }
 
 const untilReset = e => {
