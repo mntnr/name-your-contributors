@@ -2,6 +2,7 @@
 'use strict'
 
 const meow = require('meow')
+const monthBeforeAfter = require('month-before-after')
 const main = require('./index')
 const done = require('./graphql').done
 const cache = require('./graphql').cache
@@ -14,7 +15,7 @@ const cli = meow(`
     -t, --token   - GitHub auth token to use
     -a, --after   - Get contributions after date
     -b, --before  - Get contributions before data
-
+    -m, --month   - Get contributions for a certain month this year (format: 'january')
     -o, --org     - Search all repos within this organisation
     -r, --repo    - Repository to search
     -u, --user    - User to which repository belongs
@@ -81,14 +82,23 @@ const cli = meow(`
     verbose: {
       type: 'boolean',
       alias: 'v'
+    },
+    month: {
+      type: 'string',
+      alias: 'm'
     }
   }
 })
 
 const token = cli.flags.t || process.env.GITHUB_TOKEN
 
-const after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
-const before = cli.flags.b ? new Date(cli.flags.b) : new Date()
+let after = cli.flags.a ? new Date(cli.flags.a) : new Date(0)
+let before = cli.flags.b ? new Date(cli.flags.b) : new Date()
+
+if (cli.flags.m) {
+  after = monthBeforeAfter(cli.flags.m).after
+  before = monthBeforeAfter(cli.flags.m).before
+}
 
 if (cli.flags.wipeCache) {
   if (cli.flags.v) {
