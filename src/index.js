@@ -4,7 +4,7 @@ const graphql = require('./graphql')
 const queries = require('./queries')
 const csv = require('csv-writer').createArrayCsvStringifier
 const exec = require('child_process').exec
-const fs = require('fs')
+const readFileSync = require('fs').readFileSync
 
 //
 // Shell Helpers
@@ -12,7 +12,7 @@ const fs = require('fs')
 
 const shellOut = command =>
   new Promise((resolve, reject) =>
-    exec(command, (err, stdout, stderr) => {
+    exec(command, (err, stdout, _stderr) => {
       if (err) {
         reject(err)
       } else {
@@ -27,7 +27,7 @@ const parseGitURLRE = new RegExp('.*github\\.com[:/]([^/]+)\\/(.+)$')
 const parseGitURL = url => {
   const parse = parseGitURLRE.exec(url.trim())
   if (parse[2].endsWith('.git')) {
-    parse[2] = parse[2].substr(0, parse[2].length - 4)
+    parse[2] = parse[2].substring(0, parse[2].indexOf('.git'))
   }
   return parse
 }
@@ -158,7 +158,7 @@ const orgContributors = ({
 const fromConfig = async ({
   token, file, commits, reactions, verbose, debug, dryRun, full
 }) => {
-  const config = JSON.parse(fs.readFileSync(file))
+  const config = JSON.parse(readFileSync(file))
   const ght = config.token || token
   if (!ght) {
     throw new Error('No token specified in config or arguments. Aborting.')
