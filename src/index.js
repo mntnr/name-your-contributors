@@ -5,6 +5,10 @@ const queries = require('./queries')
 const csv = require('csv-writer').createArrayCsvStringifier
 const exec = require('child_process').exec
 const readFileSync = require('fs').readFileSync
+const Spinner = require('clui').Spinner
+const use = require('nclr').use
+
+const loader = new Spinner('Loading...')
 
 //
 // Shell Helpers
@@ -90,7 +94,9 @@ const prunedFetch = args => graphql.prune(args)
 const repoContributors = ({
   token, user, repo, before = new Date(), after = epochDate, debug, dryRun, verbose, commits, reactions, full
 }) => {
-  const summarize = args =>
+  loader.message(`Getting all contributors from repo ${use('inp', repo)}...`)
+  loader.start()
+  const summarise = args =>
     graphql.execute(args)
       .then(verifyResultHasKey('repository', user + '/' + repo, dryRun))
       .then(json => {
@@ -101,8 +107,9 @@ const repoContributors = ({
         }
       })
 
-  const qfn = full ? prunedFetch : summarize
+  const qfn = full ? prunedFetch : summarise
 
+  loader.stop()
   return qfn({
     token,
     debug,
@@ -124,6 +131,8 @@ const repoContributors = ({
 const orgContributors = ({
   token, orgName, before = new Date(), after = epochDate, debug, dryRun, verbose, commits, reactions, full
 }) => {
+  loader.message(`Getting all contributors of ${use('inp', orgName)}...`)
+  loader.start()
   const summarise = args =>
     graphql.execute(args)
       .then(verifyResultHasKey('organization', orgName, dryRun))
@@ -139,6 +148,7 @@ const orgContributors = ({
 
   const qfn = full ? prunedFetch : summarise
 
+  loader.stop()
   return qfn({
     token,
     debug,
@@ -158,11 +168,15 @@ const orgContributors = ({
 const fromConfig = async ({
   token, file, commits, reactions, verbose, debug, dryRun, full
 }) => {
+  loader.message(`Getting config from ${use('inp', file)}...`)
+  loader.start()
   const config = JSON.parse(readFileSync(file))
   const ght = config.token || token
   if (!ght) {
     throw new Error('No token specified in config or arguments. Aborting.')
   }
+
+  loader.message('Getting repo information from the config')
   const repoResults = config.repos.map(({ login, repo, before, after }) => {
     const afterDate = after ? new Date(after) : new Date(0)
     const beforeDate = before ? new Date(before) : new Date()
@@ -182,6 +196,7 @@ const fromConfig = async ({
     })
   })
 
+  loader.message('Getting org information from the config')
   const orgResults = config.orgs.map(({ login, before, after }) => {
     const afterDate = after ? new Date(after) : new Date(0)
     const beforeDate = before ? new Date(before) : new Date()
@@ -199,6 +214,7 @@ const fromConfig = async ({
     })
   })
 
+  loader.stop()
   return {
     repos: (await Promise.all(repoResults)).map((result, index) => {
       const repo = config.repos[index]

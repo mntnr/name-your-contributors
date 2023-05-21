@@ -39,9 +39,11 @@
     "contributing"
   ],
   "dependencies": {
+    "clui": "^0.3.6",
     "csv-writer": "1.2.0",
     "meow": "^4.0.0",
     "month-before-after": "^1.0.0",
+    "nclr": "^2.2.5",
     "persistent-cache": "^1.1.1"
   },
   "devDependencies": {
