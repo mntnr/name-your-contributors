@@ -6,6 +6,9 @@ const monthBeforeAfter = require('month-before-after')
 const main = require('./index')
 const done = require('./graphql').done
 const cache = require('./graphql').cache
+const Spinner = require('clui').Spinner
+
+const loader = new Spinner('Loading...')
 
 const cli = meow(`
   Usage
@@ -144,6 +147,7 @@ const formatReturn = x => {
 /** Wait for outstanding requests to resolve and shut down the program. */
 const cleanup = ret => {
   if (done()) {
+    loader.stop()
     process.exit(ret)
   } else {
     setTimeout(cleanup, 1000)
@@ -152,11 +156,15 @@ const cleanup = ret => {
 
 const handleOut = res => {
   console.log(res)
+  loader.message('Cleaning up...')
+  loader.start()
   cleanup(0)
 }
 
 const handleError = e => {
   console.error(e)
+  loader.message('Cleaning up after error...')
+  loader.start()
   cleanup(1)
 }
 
