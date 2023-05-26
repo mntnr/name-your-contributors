@@ -190,6 +190,7 @@ const mergeExtendedContributions = xs => {
         labels.forEach(label => p.labels.add(label))
       }
       p.count += x.count
+      p.titles.push(x.title)
     } else {
       m.set(key, {
         // Poor man's clone
@@ -198,7 +199,8 @@ const mergeExtendedContributions = xs => {
         url: x.author.url,
         count: x.count,
         email: x.author.email,
-        labels: new Set(labels)
+        labels: new Set(labels),
+        titles: [x.title]
       })
     }
   }
