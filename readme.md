@@ -285,7 +285,11 @@ $ name-your-contributors -u mntnr -r name-your-contributors --after 2017-11-10
 	  "login": "RichardLitt",
 	  "name": "Richard Littauer",
 	  "url": "https://github.com/RichardLitt",
-	  "count": 1
+	  "count": 1,
+		"titles": [
+			"Add example output to the README",
+			"Get email for users"
+		]
 	}
   ],
   "issueCommentators": [
