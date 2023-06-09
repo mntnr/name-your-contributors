@@ -21,14 +21,11 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
     - run: |
-        npm i -g greenkeeper-lockfile@1
         npm prune
-        greenkeeper-lockfile-update
 
     - run: |
         npm ci
         npm run lint
-    - run: greenkeeper-lockfile-upload
     - run: npm t
       env:
         CI: true
