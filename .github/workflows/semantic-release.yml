@@ -13,10 +13,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
+          node-version: '20.x'
       - run: npm ci
       - name: Semantic Release
-        uses: cycjimmy/semantic-release-action@v2
+        uses: codfish/semantic-release-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

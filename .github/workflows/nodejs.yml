@@ -20,9 +20,7 @@ jobs:
       uses: dcodeIO/setup-node-nvm@master
       with:
         node-version: ${{ matrix.node-version }}
-    - run: |
-        npm prune
-
+    - run: npm prune
     - run: |
         npm ci
         npm run lint

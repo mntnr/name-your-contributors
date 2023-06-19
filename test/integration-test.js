@@ -34,7 +34,7 @@ const contribPre = {
 
 test('No contributions in a single second', t => {
   return main.repoContributors({
-    token: token,
+    token,
     user: 'mntnr',
     repo: 'name-your-contributors',
     after: new Date('2016-01-01T15:21:08.104Z'),
@@ -62,7 +62,7 @@ const compareKeys = (x, k) =>
 // be flexible.
 test('Contributors before a fixed date remain static', t => {
   return main.repoContributors({
-    token: token,
+    token,
     user: 'mntnr',
     repo: 'name-your-contributors',
     before: new Date('2017-09-21'),
