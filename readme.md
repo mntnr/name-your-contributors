@@ -1,8 +1,7 @@
 # name-your-contributors
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/mntnr/name-your-contributors.svg)](https://greenkeeper.io/)
 [![npm version](https://badge.fury.io/js/name-your-contributors.svg)](https://badge.fury.io/js/name-your-contributors)
-[![Build Status](https://travis-ci.org/mntnr/name-your-contributors.svg?branch=master)](https://travis-ci.org/mntnr/name-your-contributors)
+[![Build and Deploy](https://github.com/mntnr/name-your-contributors/actions/workflows/nodejs.yml/badge.svg)](https://github.com/mntnr/name-your-contributors/actions/workflows/nodejs.yml)
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 
 > Name your GitHub contributors; get commits, issues, and comments
